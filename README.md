@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # TicoAutos-Frontend
 
 Página de registro simple implementada con HTML y CSS separados.
@@ -8,3 +9,6 @@ Página de registro simple implementada con HTML y CSS separados.
 - El estilo está en `registro.css`.
 
 La aplicación es completamente estática; no requiere npm ni React.
+=======
+# TicoAutos-Frontend
+>>>>>>> bbe3adc65c169b88dd327b86b499a1e1d812c086
