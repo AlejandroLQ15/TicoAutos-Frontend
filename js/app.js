@@ -22,4 +22,3 @@ export async function registrarUsuario(usuario, contrasena, nombre) {
     throw er;
   }
 }
-
