@@ -273,3 +273,120 @@ body {
   border-radius: var(--radius-md);
   background: var(--bg-page);
 }
+
+/* ----- Nav active ----- */
+.app-nav a.nav-active {
+  color: var(--accent-blue);
+  background: var(--accent-blue-muted);
+}
+
+/* ----- Dashboard ----- */
+.dashboard-main {
+  padding-top: 0.5rem;
+}
+
+.dashboard-hero {
+  text-align: center;
+  padding: 2.5rem 1rem 2rem;
+  margin-bottom: 2rem;
+  background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-page) 100%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+}
+
+.dashboard-hero-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem;
+  letter-spacing: -0.03em;
+}
+
+.dashboard-hero-subtitle {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  max-width: 520px;
+  margin: 0 auto 1.5rem;
+  line-height: 1.6;
+}
+
+.btn-cta {
+  width: auto;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.dashboard-card:hover {
+  border-color: var(--accent-blue);
+  box-shadow: var(--shadow-md);
+}
+
+.dashboard-card-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.dashboard-card-title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.5rem;
+}
+
+.dashboard-card-desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.dashboard-card-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--accent-blue);
+  text-decoration: none;
+}
+
+.dashboard-card-link:hover {
+  text-decoration: underline;
+}
+
+.dashboard-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.dashboard-steps li {
+  margin-bottom: 0.5rem;
+}
+
+/* ----- Form row (grid) ----- */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 520px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
