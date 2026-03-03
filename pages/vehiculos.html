@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crear vehículo - TicoAutos</title>
+  <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="app-header-inner">
+        <a href="../index.html" class="app-brand">
+          <img src="../assets/TicoAutos_Logo.png" alt="TicoAutos" class="app-brand-logo">
+        </a>
+        <nav class="app-nav" id="appNav">
+          <a href="../index.html">Inicio</a>
+          <a href="vehiculos.html" class="nav-active">Crear vehículo</a>
+          <a href="registro.html">Registro</a>
+          <a href="login.html">Iniciar sesión</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <h1 class="page-title">Registro de vehículos</h1>
+
+      <section class="card">
+        <h2 class="card-title">Agregar vehículo</h2>
+        <form id="autoForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="marca">Marca</label>
+              <input type="text" id="marca" name="marca" class="form-input" placeholder="Ej. Toyota" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="modelo">Modelo</label>
+              <input type="text" id="modelo" name="modelo" class="form-input" placeholder="Ej. Corolla" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="anio">Año</label>
+              <input type="number" id="anio" name="anio" class="form-input" placeholder="Ej. 2023" min="1900" max="2100" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="precio">Precio (₡)</label>
+              <input type="number" id="precio" name="precio" class="form-input" placeholder="Ej. 15000000" min="0" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="estado">Estado</label>
+            <select id="estado" name="estado" class="form-select">
+              <option value="disponible">Disponible</option>
+              <option value="vendido">Vendido</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Agregar vehículo</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">Vehículos registrados</h2>
+        <ul id="autosList" class="autos-list"></ul>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const token = localStorage.getItem('authToken');
+      const nav = document.getElementById('appNav');
+      if (token) {
+        nav.innerHTML = '<a href="../index.html">Inicio</a><a href="vehiculos.html" class="nav-active">Crear vehículo</a><a href="registro.html">Registro</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
+        document.getElementById('logoutLink').addEventListener('click', e => {
+          e.preventDefault();
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+          window.location.reload();
+        });
+      }
+      cargarAutos();
+    });
+
+    async function cargarAutos() {
+      const list = document.getElementById('autosList');
+      try {
+        const resp = await fetch(`${API_BASE}/autos`);
+        const result = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          list.innerHTML = '<li class="empty-state">No se pudieron cargar los vehículos.</li>';
+          return;
+        }
+        const autos = result.data || [];
+        if (autos.length === 0) {
+          list.innerHTML = '<li class="empty-state">Aún no hay vehículos registrados. Agrega uno arriba.</li>';
+          return;
+        }
+        list.innerHTML = autos.map(auto => {
+          const owner = auto.owner_id ? (auto.owner_id.nombre || auto.owner_id.username || '') : '';
+          return `<li>
+            <span class="auto-info">${escapeHtml(auto.marca)} ${escapeHtml(auto.modelo)}</span>
+            <span class="auto-meta">${auto.anio || ''} · ₡${formatNumber(auto.precio)} · ${auto.estado || 'disponible'}${owner ? ' · ' + escapeHtml(owner) : ''}</span>
+          </li>`;
+        }).join('');
+      } catch (err) {
+        console.error(err);
+        list.innerHTML = '<li class="empty-state">Error al cargar. Comprueba que el servidor esté en marcha.</li>';
+      }
+    }
+
+    function escapeHtml(s) {
+      if (!s) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    function formatNumber(n) {
+      if (n == null) return '0';
+      return Number(n).toLocaleString('es-CR');
+    }
+
+    document.getElementById('autoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const authUser = JSON.parse(localStorage.getItem('authUser') || '{}');
+      const owner_id = authUser.id;
+      if (!owner_id) {
+        alert('Debes iniciar sesión para agregar un vehículo.');
+        window.location.href = 'login.html';
+        return;
+      }
+      const payload = {
+        marca: document.getElementById('marca').value.trim(),
+        modelo: document.getElementById('modelo').value.trim(),
+        anio: parseInt(document.getElementById('anio').value, 10),
+        precio: parseFloat(document.getElementById('precio').value) || 0,
+        estado: document.getElementById('estado').value || 'disponible',
+        owner_id
+      };
+      try {
+        const resp = await fetch(`${API_BASE}/autos`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          throw new Error(data.message || 'Error al guardar');
+        }
+        document.getElementById('autoForm').reset();
+        cargarAutos();
+      } catch (err) {
+        alert(err.message || 'Error al agregar vehículo');
+      }
+    });
+  </script>
+</body>
+</html>
