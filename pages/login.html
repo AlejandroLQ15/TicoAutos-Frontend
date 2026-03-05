@@ -39,6 +39,19 @@
   <script>
     const LOGIN_URL = 'http://localhost:3000/api/users/login';
 
+    (function () {
+      const rawUser = localStorage.getItem('authUser');
+      if (!rawUser) return;
+      try {
+        const parsed = JSON.parse(rawUser);
+        if (parsed && Object.keys(parsed).length > 0) {
+          window.location.replace('../index.html');
+        }
+      } catch {
+        localStorage.removeItem('authUser');
+      }
+    })();
+
     document.getElementById('loginForm').addEventListener('submit', async function(event) {
       event.preventDefault();
       const usuario = document.getElementById('usuario').value.trim();
@@ -57,7 +70,7 @@
         const data = await resp.json().catch(() => ({}));
         localStorage.setItem('authUser', JSON.stringify(data.user || { username: usuario }));
         alert('Inicio de sesión exitoso');
-        window.location.href = 'index.html';
+        window.location.href = '../index.html';
       } catch (err) {
         console.error('Error en autenticación', err);
         alert(err.message || 'Credenciales inválidas');

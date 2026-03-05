@@ -72,17 +72,35 @@
     const API_BASE = 'http://localhost:3000/api';
 
     document.addEventListener('DOMContentLoaded', () => {
-      const token = localStorage.getItem('authToken');
+      const rawUser = localStorage.getItem('authUser');
+      if (!rawUser) {
+        window.location.replace('login.html');
+        return;
+      }
+
+      let authUser = null;
+      try {
+        authUser = JSON.parse(rawUser);
+      } catch {
+        localStorage.removeItem('authUser');
+        window.location.replace('login.html');
+        return;
+      }
+
+      if (!authUser || Object.keys(authUser).length === 0) {
+        localStorage.removeItem('authUser');
+        window.location.replace('login.html');
+        return;
+      }
+
       const nav = document.getElementById('appNav');
-      if (token) {
-        nav.innerHTML = '<a href="../index.html">Inicio</a><a href="vehiculos.html" class="nav-active">Crear vehículo</a><a href="registro.html">Registro</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
+      nav.innerHTML = '<a href="../index.html">Inicio</a><a href="vehiculos.html" class="nav-active">Crear vehículo</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
         document.getElementById('logoutLink').addEventListener('click', e => {
           e.preventDefault();
-          localStorage.removeItem('authToken');
           localStorage.removeItem('authUser');
-          window.location.reload();
+          window.location.href = 'login.html';
         });
-      }
+
       cargarAutos();
     });
 

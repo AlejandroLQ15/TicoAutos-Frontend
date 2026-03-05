@@ -7,6 +7,14 @@
   <title>TicoAutos - Inicio</title>
   
   <link rel="stylesheet" href="css/styles.css">
+  <script>
+    (function () {
+      const rawUser = localStorage.getItem('authUser');
+      if (!rawUser) {
+        window.location.replace('pages/login.html');
+      }
+    })();
+  </script>
   
 </head>
 <body>
@@ -71,15 +79,14 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const token = localStorage.getItem('authToken');
+      const authUser = localStorage.getItem('authUser');
       const nav = document.getElementById('appNav');
-      if (token) {
-        nav.innerHTML = '<a href="index.html" class="nav-active">Inicio</a><a href="pages/vehiculos.html">Crear vehículo</a><a href="pages/registro.html">Registro</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
+      if (authUser) {
+        nav.innerHTML = '<a href="index.html" class="nav-active">Inicio</a><a href="pages/vehiculos.html">Crear vehículo</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
         document.getElementById('logoutLink').addEventListener('click', e => {
           e.preventDefault();
-          localStorage.removeItem('authToken');
           localStorage.removeItem('authUser');
-          window.location.reload();
+          window.location.href = 'pages/login.html';
         });
       }
     });
