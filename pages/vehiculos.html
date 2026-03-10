@@ -70,10 +70,13 @@
 
   <script>
     const API_BASE = 'http://localhost:3000/api';
+    const AUTH_TOKEN_KEY = 'authToken';
+    const AUTH_USER_KEY = 'authUser';
 
     document.addEventListener('DOMContentLoaded', () => {
-      const rawUser = localStorage.getItem('authUser');
-      if (!rawUser) {
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      const rawUser = localStorage.getItem(AUTH_USER_KEY);
+      if (!token || !rawUser) {
         window.location.replace('login.html');
         return;
       }
@@ -82,13 +85,15 @@
       try {
         authUser = JSON.parse(rawUser);
       } catch {
-        localStorage.removeItem('authUser');
+        localStorage.removeItem(AUTH_USER_KEY);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
         window.location.replace('login.html');
         return;
       }
 
       if (!authUser || Object.keys(authUser).length === 0) {
-        localStorage.removeItem('authUser');
+        localStorage.removeItem(AUTH_USER_KEY);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
         window.location.replace('login.html');
         return;
       }
@@ -97,7 +102,8 @@
       nav.innerHTML = '<a href="../index.html">Inicio</a><a href="vehiculos.html" class="nav-active">Crear vehículo</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
         document.getElementById('logoutLink').addEventListener('click', e => {
           e.preventDefault();
-          localStorage.removeItem('authUser');
+          localStorage.removeItem(AUTH_USER_KEY);
+          localStorage.removeItem(AUTH_TOKEN_KEY);
           window.location.href = 'login.html';
         });
 
@@ -114,15 +120,19 @@
           return;
         }
         const autos = result.data || [];
+        const authUser = JSON.parse(localStorage.getItem(AUTH_USER_KEY) || '{}');
         if (autos.length === 0) {
           list.innerHTML = '<li class="empty-state">Aún no hay vehículos registrados. Agrega uno arriba.</li>';
           return;
         }
         list.innerHTML = autos.map(auto => {
           const owner = auto.owner_id ? (auto.owner_id.nombre || auto.owner_id.username || '') : '';
+          const ownerId = auto.owner_id?._id || auto.owner_id?.id || auto.owner_id;
+          const canDelete = Boolean(authUser.id && ownerId && authUser.id === String(ownerId));
           return `<li>
             <span class="auto-info">${escapeHtml(auto.marca)} ${escapeHtml(auto.modelo)}</span>
             <span class="auto-meta">${auto.anio || ''} · ₡${formatNumber(auto.precio)} · ${auto.estado || 'disponible'}${owner ? ' · ' + escapeHtml(owner) : ''}</span>
+            ${canDelete ? `<button type="button" class="btn btn-danger btn-sm" onclick="eliminarAuto('${auto._id}')">Eliminar</button>` : ''}
           </li>`;
         }).join('');
       } catch (err) {
@@ -145,9 +155,8 @@
 
     document.getElementById('autoForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const authUser = JSON.parse(localStorage.getItem('authUser') || '{}');
-      const owner_id = authUser.id;
-      if (!owner_id) {
+      const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+      if (!authToken) {
         alert('Debes iniciar sesión para agregar un vehículo.');
         window.location.href = 'login.html';
         return;
@@ -157,13 +166,15 @@
         modelo: document.getElementById('modelo').value.trim(),
         anio: parseInt(document.getElementById('anio').value, 10),
         precio: parseFloat(document.getElementById('precio').value) || 0,
-        estado: document.getElementById('estado').value || 'disponible',
-        owner_id
+        estado: document.getElementById('estado').value || 'disponible'
       };
       try {
         const resp = await fetch(`${API_BASE}/autos`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
           body: JSON.stringify(payload)
         });
         const data = await resp.json().catch(() => ({}));
@@ -176,6 +187,35 @@
         alert(err.message || 'Error al agregar vehículo');
       }
     });
+
+    async function eliminarAuto(autoId) {
+      const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+      if (!authToken) {
+        alert('Debes iniciar sesión para eliminar un vehículo.');
+        window.location.href = 'login.html';
+        return;
+      }
+      if (!confirm('¿Seguro que deseas eliminar este vehículo?')) {
+        return;
+      }
+      try {
+        const resp = await fetch(`${API_BASE}/autos/${autoId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          throw new Error(data.message || 'No se pudo eliminar el vehículo');
+        }
+        cargarAutos();
+      } catch (err) {
+        alert(err.message || 'Error al eliminar vehículo');
+      }
+    }
+
+    window.eliminarAuto = eliminarAuto;
   </script>
 </body>
 </html>

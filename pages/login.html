@@ -38,17 +38,21 @@
 
   <script>
     const LOGIN_URL = 'http://localhost:3000/api/users/login';
+    const AUTH_TOKEN_KEY = 'authToken';
+    const AUTH_USER_KEY = 'authUser';
 
     (function () {
-      const rawUser = localStorage.getItem('authUser');
-      if (!rawUser) return;
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      const rawUser = localStorage.getItem(AUTH_USER_KEY);
+      if (!token || !rawUser) return;
       try {
         const parsed = JSON.parse(rawUser);
         if (parsed && Object.keys(parsed).length > 0) {
           window.location.replace('../index.html');
         }
       } catch {
-        localStorage.removeItem('authUser');
+        localStorage.removeItem(AUTH_USER_KEY);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
       }
     })();
 
@@ -68,7 +72,11 @@
           throw new Error(errData?.message || 'Credenciales inválidas');
         }
         const data = await resp.json().catch(() => ({}));
-        localStorage.setItem('authUser', JSON.stringify(data.user || { username: usuario }));
+        if (!data.token) {
+          throw new Error('No se recibió token de autenticación');
+        }
+        localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user || { username: usuario }));
         alert('Inicio de sesión exitoso');
         window.location.href = '../index.html';
       } catch (err) {

@@ -9,8 +9,8 @@
   <link rel="stylesheet" href="css/styles.css">
   <script>
     (function () {
-      const rawUser = localStorage.getItem('authUser');
-      if (!rawUser) {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
         window.location.replace('pages/login.html');
       }
     })();
@@ -79,15 +79,21 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+      const authToken = localStorage.getItem('authToken');
       const authUser = localStorage.getItem('authUser');
       const nav = document.getElementById('appNav');
-      if (authUser) {
+      if (authToken && authUser) {
         nav.innerHTML = '<a href="index.html" class="nav-active">Inicio</a><a href="pages/vehiculos.html">Crear vehículo</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
         document.getElementById('logoutLink').addEventListener('click', e => {
           e.preventDefault();
           localStorage.removeItem('authUser');
+          localStorage.removeItem('authToken');
           window.location.href = 'pages/login.html';
         });
+      } else {
+        localStorage.removeItem('authUser');
+        localStorage.removeItem('authToken');
+        window.location.replace('pages/login.html');
       }
     });
   </script>

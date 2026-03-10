@@ -1,4 +1,3 @@
-// --- Registrar usuario usando Fetch API (sin Axios) ---
 // Envía un POST JSON a http://localhost:3000/api/users
 // Retorna el cuerpo de la respuesta o lanza un error si algo falla.
 
