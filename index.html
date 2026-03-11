@@ -26,7 +26,7 @@
         </a>
         <nav class="app-nav" id="appNav">
           <a href="index.html" class="nav-active">Inicio</a>
-          <a href="pages/vehiculos.html">Crear vehículo</a>
+          <a href="pages/crear-vehiculo.html">Crear vehículo</a>
           <a href="pages/registro.html">Registro</a>
           <a href="pages/login.html">Iniciar sesión</a>
         </nav>
@@ -40,7 +40,7 @@
           Gestiona tu flota de vehículos de forma sencilla. Registra marcas y modelos,
           consulta el listado y mantén todo organizado en un solo lugar.
         </p>
-        <a href="pages/vehiculos.html" class="btn btn-primary btn-cta">
+        <a href="pages/crear-vehiculo.html" class="btn btn-primary btn-cta">
           Crear vehículo
         </a>
       </section>
@@ -56,13 +56,13 @@
           <div class="dashboard-card-icon" aria-hidden="true">📋</div>
           <h3 class="dashboard-card-title">Listado</h3>
           <p class="dashboard-card-desc">Revisa el listado completo de vehículos registrados.</p>
-          <a href="pages/vehiculos.html#autosList" class="dashboard-card-link">Ver listado →</a>
+          <a href="pages/listado.html" class="dashboard-card-link">Ver listado →</a>
         </div>
         <div class="dashboard-card">
           <div class="dashboard-card-icon" aria-hidden="true">➕</div>
           <h3 class="dashboard-card-title">Agregar nuevo</h3>
           <p class="dashboard-card-desc">Añade un vehículo indicando marca y modelo.</p>
-          <a href="pages/vehiculos.html" class="dashboard-card-link">Crear vehículo →</a>
+          <a href="pages/crear-vehiculo.html" class="dashboard-card-link">Crear vehículo →</a>
         </div>
       </section>
 
@@ -83,7 +83,7 @@
       const authUser = localStorage.getItem('authUser');
       const nav = document.getElementById('appNav');
       if (authToken && authUser) {
-        nav.innerHTML = '<a href="index.html" class="nav-active">Inicio</a><a href="pages/vehiculos.html">Crear vehículo</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
+        nav.innerHTML = '<a href="index.html" class="nav-active">Inicio</a><a href="pages/crear-vehiculo.html">Crear vehículo</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
         document.getElementById('logoutLink').addEventListener('click', e => {
           e.preventDefault();
           localStorage.removeItem('authUser');

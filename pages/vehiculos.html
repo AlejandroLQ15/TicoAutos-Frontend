@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
-  <title>Crear vehículo - TicoAutos</title>
+  <title>Mis vehículos - TicoAutos</title>
 
   <link rel="stylesheet" href="../css/styles.css">
 </head>
@@ -17,7 +17,7 @@
         </a>
         <nav class="app-nav" id="appNav">
           <a href="../index.html">Inicio</a>
-          <a href="vehiculos.html" class="nav-active">Crear vehículo</a>
+          <a href="vehiculos.html" class="nav-active">Mis vehículos</a>
           <a href="registro.html">Registro</a>
           <a href="login.html">Iniciar sesión</a>
         </nav>
@@ -25,44 +25,11 @@
     </header>
 
     <main class="app-main">
-      <h1 class="page-title">Registro de vehículos</h1>
+      <h1 class="page-title">Mis vehículos</h1>
 
       <section class="card">
-        <h2 class="card-title">Agregar vehículo</h2>
-        <form id="autoForm">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="marca">Marca</label>
-              <input type="text" id="marca" name="marca" class="form-input" placeholder="Ej. Toyota" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="modelo">Modelo</label>
-              <input type="text" id="modelo" name="modelo" class="form-input" placeholder="Ej. Corolla" required>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="anio">Año</label>
-              <input type="number" id="anio" name="anio" class="form-input" placeholder="Ej. 2023" min="1900" max="2100" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="precio">Precio (₡)</label>
-              <input type="number" id="precio" name="precio" class="form-input" placeholder="Ej. 15000000" min="0" required>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="estado">Estado</label>
-            <select id="estado" name="estado" class="form-select">
-              <option value="disponible">Disponible</option>
-              <option value="vendido">Vendido</option>
-            </select>
-          </div>
-          <button type="submit" class="btn btn-primary">Agregar vehículo</button>
-        </form>
-      </section>
-
-      <section class="card">
-        <h2 class="card-title">Vehículos registrados</h2>
+        <h2 class="card-title">Mis vehículos</h2>
+        <p class="section-hint">Solo se muestran las publicaciones del usuario autenticado.</p>
         <ul id="autosList" class="autos-list"></ul>
       </section>
     </main>
@@ -72,72 +39,120 @@
     const API_BASE = 'http://localhost:3000/api';
     const AUTH_TOKEN_KEY = 'authToken';
     const AUTH_USER_KEY = 'authUser';
+    const ESTADO_DISPONIBLE = 'disponible';
+    const ESTADO_VENDIDO = 'vendido';
 
     document.addEventListener('DOMContentLoaded', () => {
-      const token = localStorage.getItem(AUTH_TOKEN_KEY);
-      const rawUser = localStorage.getItem(AUTH_USER_KEY);
-      if (!token || !rawUser) {
-        window.location.replace('login.html');
-        return;
-      }
-
-      let authUser = null;
-      try {
-        authUser = JSON.parse(rawUser);
-      } catch {
-        localStorage.removeItem(AUTH_USER_KEY);
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-        window.location.replace('login.html');
-        return;
-      }
-
-      if (!authUser || Object.keys(authUser).length === 0) {
-        localStorage.removeItem(AUTH_USER_KEY);
-        localStorage.removeItem(AUTH_TOKEN_KEY);
+      const auth = getAuthContext();
+      if (!auth) {
         window.location.replace('login.html');
         return;
       }
 
       const nav = document.getElementById('appNav');
-      nav.innerHTML = '<a href="../index.html">Inicio</a><a href="vehiculos.html" class="nav-active">Crear vehículo</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
-        document.getElementById('logoutLink').addEventListener('click', e => {
-          e.preventDefault();
-          localStorage.removeItem(AUTH_USER_KEY);
-          localStorage.removeItem(AUTH_TOKEN_KEY);
-          window.location.href = 'login.html';
-        });
+      nav.innerHTML = '<a href="../index.html">Inicio</a><a href="crear-vehiculo.html">Crear vehículo</a><a href="vehiculos.html" class="nav-active">Mis vehículos</a><a href="listado.html">Listado</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
+      document.getElementById('logoutLink').addEventListener('click', e => {
+        e.preventDefault();
+        clearAuth();
+        window.location.href = 'login.html';
+      });
 
       cargarAutos();
     });
 
+    function clearAuth() {
+      localStorage.removeItem(AUTH_USER_KEY);
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+    }
+
+    function getAuthContext() {
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      const rawUser = localStorage.getItem(AUTH_USER_KEY);
+      if (!token || !rawUser) return null;
+      try {
+        const user = JSON.parse(rawUser);
+        if (!user || Object.keys(user).length === 0) return null;
+        return { token, user };
+      } catch {
+        clearAuth();
+        return null;
+      }
+    }
+
+    function getUserId(user) {
+      if (!user) return '';
+      return String(user._id || user.id || user.userId || '').trim();
+    }
+
+    function isOwner(auto, user) {
+      const userId = getUserId(user);
+      const owner = auto?.owner_id;
+      const ownerId = String(owner?._id || owner?.id || owner || '').trim();
+      if (userId && ownerId) {
+        return userId === ownerId;
+      }
+
+      // Fallback cuando el backend no incluye IDs relacionados.
+      const currentUsername = String(user?.username || '').trim().toLowerCase();
+      const ownerUsername = String(owner?.username || owner?.user || '').trim().toLowerCase();
+      return Boolean(currentUsername && ownerUsername && currentUsername === ownerUsername);
+    }
+
+    async function getMyAutos(auth) {
+      const headers = { 'Authorization': `Bearer ${auth.token}` };
+
+      // Intenta endpoint dedicado de "mis autos" si existe en backend.
+      const myResp = await fetch(`${API_BASE}/autos/mis`, { headers });
+      if (myResp.ok) {
+        const myResult = await myResp.json().catch(() => ({}));
+        return myResult.data || myResult.autos || [];
+      }
+
+      // Fallback: obtiene todos y filtra en cliente por owner.
+      const resp = await fetch(`${API_BASE}/autos`, { headers });
+      const result = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        throw new Error(result.message || 'No se pudieron cargar los vehículos.');
+      }
+
+      const autos = result.data || result.autos || [];
+      return autos.filter(auto => isOwner(auto, auth.user));
+    }
+
     async function cargarAutos() {
       const list = document.getElementById('autosList');
+      const auth = getAuthContext();
+      if (!auth) {
+        window.location.replace('login.html');
+        return;
+      }
+
       try {
-        const resp = await fetch(`${API_BASE}/autos`);
-        const result = await resp.json().catch(() => ({}));
-        if (!resp.ok) {
-          list.innerHTML = '<li class="empty-state">No se pudieron cargar los vehículos.</li>';
-          return;
-        }
-        const autos = result.data || [];
-        const authUser = JSON.parse(localStorage.getItem(AUTH_USER_KEY) || '{}');
+        const autos = await getMyAutos(auth);
         if (autos.length === 0) {
-          list.innerHTML = '<li class="empty-state">Aún no hay vehículos registrados. Agrega uno arriba.</li>';
+          list.innerHTML = '<li class="empty-state">Aún no tienes vehículos publicados. Agrega uno arriba.</li>';
           return;
         }
+
         list.innerHTML = autos.map(auto => {
-          const owner = auto.owner_id ? (auto.owner_id.nombre || auto.owner_id.username || '') : '';
-          const ownerId = auto.owner_id?._id || auto.owner_id?.id || auto.owner_id;
-          const canDelete = Boolean(authUser.id && ownerId && authUser.id === String(ownerId));
-          return `<li>
-            <span class="auto-info">${escapeHtml(auto.marca)} ${escapeHtml(auto.modelo)}</span>
-            <span class="auto-meta">${auto.anio || ''} · ₡${formatNumber(auto.precio)} · ${auto.estado || 'disponible'}${owner ? ' · ' + escapeHtml(owner) : ''}</span>
-            ${canDelete ? `<button type="button" class="btn btn-danger btn-sm" onclick="eliminarAuto('${auto._id}')">Eliminar</button>` : ''}
+          const autoId = auto._id || auto.id;
+          const estado = auto.estado || ESTADO_DISPONIBLE;
+          const sold = String(estado).toLowerCase() === ESTADO_VENDIDO;
+          return `<li class="auto-item">
+            <div>
+              <span class="auto-info">${escapeHtml(auto.marca)} ${escapeHtml(auto.modelo)}</span>
+              <span class="auto-meta">${auto.anio || ''} · ₡${formatNumber(auto.precio)}</span>
+              <span class="auto-status ${sold ? 'status-sold' : 'status-available'}">${sold ? 'Vendido' : 'Disponible'}</span>
+            </div>
+            <div class="auto-actions">
+              ${!sold ? `<button type="button" class="btn btn-secondary btn-sm" onclick="marcarComoVendido('${autoId}')">Marcar como vendido</button>` : ''}
+              <button type="button" class="btn btn-danger btn-sm" onclick="eliminarAuto('${autoId}')">Eliminar</button>
+            </div>
           </li>`;
         }).join('');
       } catch (err) {
         console.error(err);
-        list.innerHTML = '<li class="empty-state">Error al cargar. Comprueba que el servidor esté en marcha.</li>';
+        list.innerHTML = `<li class="empty-state">${escapeHtml(err.message || 'Error al cargar. Comprueba que el servidor esté en marcha.')}</li>`;
       }
     }
 
@@ -153,44 +168,38 @@
       return Number(n).toLocaleString('es-CR');
     }
 
-    document.getElementById('autoForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-      if (!authToken) {
-        alert('Debes iniciar sesión para agregar un vehículo.');
+    async function marcarComoVendido(autoId) {
+      const auth = getAuthContext();
+      if (!auth) {
+        alert('Debes iniciar sesión para actualizar el vehículo.');
         window.location.href = 'login.html';
         return;
       }
-      const payload = {
-        marca: document.getElementById('marca').value.trim(),
-        modelo: document.getElementById('modelo').value.trim(),
-        anio: parseInt(document.getElementById('anio').value, 10),
-        precio: parseFloat(document.getElementById('precio').value) || 0,
-        estado: document.getElementById('estado').value || 'disponible'
-      };
+
       try {
-        const resp = await fetch(`${API_BASE}/autos`, {
-          method: 'POST',
+        const resp = await fetch(`${API_BASE}/autos/${autoId}`, {
+          method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
+            'Authorization': `Bearer ${auth.token}`
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ estado: ESTADO_VENDIDO })
         });
+
         const data = await resp.json().catch(() => ({}));
         if (!resp.ok) {
-          throw new Error(data.message || 'Error al guardar');
+          throw new Error(data.message || 'No se pudo marcar como vendido.');
         }
-        document.getElementById('autoForm').reset();
+
         cargarAutos();
       } catch (err) {
-        alert(err.message || 'Error al agregar vehículo');
+        alert(err.message || 'Error al actualizar vehículo');
       }
-    });
+    }
 
     async function eliminarAuto(autoId) {
-      const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
-      if (!authToken) {
+      const auth = getAuthContext();
+      if (!auth) {
         alert('Debes iniciar sesión para eliminar un vehículo.');
         window.location.href = 'login.html';
         return;
@@ -202,7 +211,7 @@
         const resp = await fetch(`${API_BASE}/autos/${autoId}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${authToken}`
+            'Authorization': `Bearer ${auth.token}`
           }
         });
         const data = await resp.json().catch(() => ({}));
@@ -215,6 +224,7 @@
       }
     }
 
+    window.marcarComoVendido = marcarComoVendido;
     window.eliminarAuto = eliminarAuto;
   </script>
 </body>
