@@ -27,6 +27,7 @@
         <nav class="app-nav" id="appNav">
           <a href="index.html" class="nav-active">Inicio</a>
           <a href="pages/crear-vehiculo.html">Crear vehículo</a>
+          <a href="pages/inbox.html">Inbox</a>
           <a href="pages/registro.html">Registro</a>
           <a href="pages/login.html">Iniciar sesión</a>
         </nav>
@@ -83,7 +84,7 @@
       const authUser = localStorage.getItem('authUser');
       const nav = document.getElementById('appNav');
       if (authToken && authUser) {
-        nav.innerHTML = '<a href="index.html" class="nav-active">Inicio</a><a href="pages/crear-vehiculo.html">Crear vehículo</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
+        nav.innerHTML = '<a href="index.html" class="nav-active">Inicio</a><a href="pages/crear-vehiculo.html">Crear vehículo</a><a href="pages/inbox.html">Inbox</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
         document.getElementById('logoutLink').addEventListener('click', e => {
           e.preventDefault();
           localStorage.removeItem('authUser');

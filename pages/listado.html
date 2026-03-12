@@ -18,6 +18,7 @@
           <a href="crear-vehiculo.html">Crear vehículo</a>
           <a href="vehiculos.html">Mis vehículos</a>
           <a href="listado.html" class="nav-active">Listado</a>
+          <a href="inbox.html">Inbox</a>
         </nav>
       </div>
     </header>
@@ -46,7 +47,7 @@
       }
 
       const nav = document.getElementById('appNav');
-      nav.innerHTML = '<a href="../index.html">Inicio</a><a href="crear-vehiculo.html">Crear vehículo</a><a href="vehiculos.html">Mis vehículos</a><a href="listado.html" class="nav-active">Listado</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
+      nav.innerHTML = '<a href="../index.html">Inicio</a><a href="crear-vehiculo.html">Crear vehículo</a><a href="vehiculos.html">Mis vehículos</a><a href="listado.html" class="nav-active">Listado</a><a href="inbox.html">Inbox</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
       document.getElementById('logoutLink').addEventListener('click', e => {
         e.preventDefault();
         clearAuth();
@@ -119,6 +120,7 @@
               <span class="auto-info">${escapeHtml(auto.marca)} ${escapeHtml(auto.modelo)}</span>
               <span class="auto-meta">${auto.anio || ''} · ₡${formatNumber(auto.precio)} · ${escapeHtml(auto.estado || 'disponible')} · ${escapeHtml(String(ownerLabel))}</span>
             </div>
+            <div class="auto-actions"><a class="btn btn-light btn-sm" href="vehiculo.html?id=${auto._id || auto.id}">Ver vehículo</a></div>
           </li>`;
         }).join('');
       } catch (err) {

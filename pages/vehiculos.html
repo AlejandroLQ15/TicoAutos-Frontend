@@ -50,7 +50,7 @@
       }
 
       const nav = document.getElementById('appNav');
-      nav.innerHTML = '<a href="../index.html">Inicio</a><a href="crear-vehiculo.html">Crear vehículo</a><a href="vehiculos.html" class="nav-active">Mis vehículos</a><a href="listado.html">Listado</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
+      nav.innerHTML = '<a href="../index.html">Inicio</a><a href="crear-vehiculo.html">Crear vehículo</a><a href="vehiculos.html" class="nav-active">Mis vehículos</a><a href="listado.html">Listado</a><a href="inbox.html">Inbox</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
       document.getElementById('logoutLink').addEventListener('click', e => {
         e.preventDefault();
         clearAuth();
@@ -145,6 +145,7 @@
               <span class="auto-status ${sold ? 'status-sold' : 'status-available'}">${sold ? 'Vendido' : 'Disponible'}</span>
             </div>
             <div class="auto-actions">
+              <a class="btn btn-light btn-sm" href="vehiculo.html?id=${autoId}">Ver vehículo</a>
               ${!sold ? `<button type="button" class="btn btn-secondary btn-sm" onclick="marcarComoVendido('${autoId}')">Marcar como vendido</button>` : ''}
               <button type="button" class="btn btn-danger btn-sm" onclick="eliminarAuto('${autoId}')">Eliminar</button>
             </div>
