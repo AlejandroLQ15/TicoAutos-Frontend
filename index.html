@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>TicoAutos - Inicio</title>
+  
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="app-header-inner">
+        <a href="index.html" class="app-brand">
+          <img src="assets/TicoAutos_Logo.png" alt="TicoAutos" class="app-brand-logo">
+        </a>
+        <nav class="app-nav" id="appNav"></nav>
+      </div>
+    </header>
+
+    <main class="app-main dashboard-main">
+      <section class="dashboard-hero">
+        <h1 class="dashboard-hero-title">Bienvenido a TicoAutos</h1>
+        <p class="dashboard-hero-subtitle">
+          Encuentra y publica vehículos. Explora los anuncios más recientes o regístrate para vender el tuyo.
+        </p>
+        <a href="pages/listado.html" class="btn btn-primary btn-cta" id="heroCta">Ver todos los vehículos</a>
+      </section>
+
+      <section class="dashboard-vehicles card">
+        <h2 class="card-title">Vehículos publicados</h2>
+        <p class="section-hint">Filtra por tu interés y explora los anuncios.</p>
+
+        <div class="dashboard-filters" id="dashboardFilters">
+          <form id="filterForm" class="dashboard-filters-form">
+            <div class="dashboard-filters-row">
+              <div class="form-group">
+                <label class="form-label" for="fMarca">Marca</label>
+                <input type="text" id="fMarca" class="form-input" placeholder="Ej. Toyota">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fCombustible">Combustible</label>
+                <select id="fCombustible" class="form-select">
+                  <option value="">Todos</option>
+                  <option value="gasolina">Gasolina</option>
+                  <option value="diesel">Diesel</option>
+                  <option value="hibrido">Híbrido</option>
+                  <option value="electrico">Eléctrico</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fTransmision">Transmisión</label>
+                <select id="fTransmision" class="form-select">
+                  <option value="">Todos</option>
+                  <option value="automatico">Automático</option>
+                  <option value="manual">Manual</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fMinAnio">Año desde</label>
+                <input type="number" id="fMinAnio" class="form-input" placeholder="Ej. 2018" min="1900" max="2100">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fMaxAnio">Año hasta</label>
+                <input type="number" id="fMaxAnio" class="form-input" placeholder="Ej. 2024" min="1900" max="2100">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fMinPrecio">Precio mín. (₡)</label>
+                <input type="number" id="fMinPrecio" class="form-input" placeholder="0" min="0">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fMaxPrecio">Precio máx. (₡)</label>
+                <input type="number" id="fMaxPrecio" class="form-input" placeholder="Ej. 25000000" min="0">
+              </div>
+              <div class="form-group dashboard-filters-actions">
+                <button type="submit" class="btn btn-primary">Filtrar</button>
+                <button type="button" id="clearFiltersBtn" class="btn btn-light">Limpiar</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div id="vehiculosInicio" class="dashboard-vehicles-grid">
+          <p class="dashboard-vehicles-loading" id="vehiculosInicioLoading">Cargando vehículos...</p>
+        </div>
+        <p class="dashboard-vehicles-more" id="vehiculosInicioMore" style="display: none;">
+          <a href="pages/listado.html" class="btn btn-light">Ver listado completo</a>
+        </p>
+      </section>
+
+      <section class="dashboard-cards">
+        <div class="dashboard-card">
+          <div class="dashboard-card-icon" aria-hidden="true">🚗</div>
+          <h3 class="dashboard-card-title">Mis vehículos</h3>
+          <p class="dashboard-card-desc">Gestiona tus publicaciones, edita o marca como vendido.</p>
+          <a href="pages/vehiculos.html" class="dashboard-card-link">Ir a mis vehículos →</a>
+        </div>
+        <div class="dashboard-card">
+          <div class="dashboard-card-icon" aria-hidden="true">📋</div>
+          <h3 class="dashboard-card-title">Listado</h3>
+          <p class="dashboard-card-desc">Busca con filtros por marca, año, precio y más.</p>
+          <a href="pages/listado.html" class="dashboard-card-link">Ver listado →</a>
+        </div>
+        <div class="dashboard-card">
+          <div class="dashboard-card-icon" aria-hidden="true">➕</div>
+          <h3 class="dashboard-card-title">Publicar vehículo</h3>
+          <p class="dashboard-card-desc">Añade fotos, kilometraje, combustible y provincia.</p>
+          <a href="pages/crear-vehiculo.html" class="dashboard-card-link">Crear vehículo →</a>
+        </div>
+      </section>
+
+      <section class="dashboard-info card">
+        <h2 class="card-title">¿Cómo empezar?</h2>
+        <ol class="dashboard-steps">
+          <li><strong>Explora</strong> los vehículos arriba o en el listado (no necesitas cuenta).</li>
+          <li><strong>Regístrate</strong> e inicia sesión para publicar tu vehículo o hacer preguntas.</li>
+          <li><strong>Publica</strong> con fotos, kilometraje y provincia. Tu anuncio aparecerá en el inicio.</li>
+        </ol>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <div class="app-footer-inner">
+        <p class="app-footer-copy">© 2025 TicoAutos · Programación en Ambiente Web</p>
+        <div class="app-footer-links">
+          <a href="index.html">Inicio</a>
+          <a href="pages/listado.html">Vehículos</a>
+          <a href="pages/inbox.html">Mensajes</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api';
+    const API_ORIGIN = 'http://localhost:3000';
+    const AUTH_TOKEN_KEY = 'authToken';
+    const AUTH_USER_KEY = 'authUser';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
+      const authUser = localStorage.getItem(AUTH_USER_KEY);
+      const nav = document.getElementById('appNav');
+      const heroCta = document.getElementById('heroCta');
+
+      const logoutIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+      if (authToken && authUser) {
+        nav.innerHTML = '<a href="index.html" class="nav-active">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger">Vehículos</span><div class="nav-dropdown-menu"><a href="pages/vehiculos.html">Mis vehículos</a><a href="pages/crear-vehiculo.html">Crear vehículo</a><a href="pages/listado.html">Ver listado</a></div></div><a href="pages/inbox.html">Mensajes</a><a href="pages/perfil.html">Mi perfil</a><a href="#" id="logoutLink" class="nav-logout" title="Cerrar sesión" aria-label="Cerrar sesión">' + logoutIcon + '</a>';
+        if (heroCta) { heroCta.textContent = 'Crear vehículo'; heroCta.href = 'pages/crear-vehiculo.html'; }
+        document.getElementById('logoutLink').addEventListener('click', e => {
+          e.preventDefault();
+          localStorage.removeItem(AUTH_USER_KEY);
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          window.location.href = 'pages/login.html';
+        });
+      } else {
+        nav.innerHTML = '<a href="index.html" class="nav-active">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger">Vehículos</span><div class="nav-dropdown-menu"><a href="pages/listado.html">Ver listado</a></div></div><a href="pages/registro.html">Registro</a><a href="pages/login.html">Iniciar sesión</a>';
+      }
+
+      document.getElementById('filterForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        loadVehiculosInicio();
+      });
+      document.getElementById('clearFiltersBtn').addEventListener('click', function() {
+        document.getElementById('fMarca').value = '';
+        document.getElementById('fCombustible').value = '';
+        document.getElementById('fTransmision').value = '';
+        document.getElementById('fMinAnio').value = '';
+        document.getElementById('fMaxAnio').value = '';
+        document.getElementById('fMinPrecio').value = '';
+        document.getElementById('fMaxPrecio').value = '';
+        loadVehiculosInicio();
+      });
+
+      loadVehiculosInicio();
+    });
+
+    function getFilterParams() {
+      const marca = document.getElementById('fMarca').value.trim();
+      const combustible = document.getElementById('fCombustible').value.trim();
+      const transmision = document.getElementById('fTransmision').value.trim();
+      const minAnio = document.getElementById('fMinAnio').value.trim();
+      const maxAnio = document.getElementById('fMaxAnio').value.trim();
+      const minPrecio = document.getElementById('fMinPrecio').value.trim();
+      const maxPrecio = document.getElementById('fMaxPrecio').value.trim();
+      const params = new URLSearchParams();
+      params.set('limit', '12');
+      params.set('page', '1');
+      if (marca) params.set('marca', marca);
+      if (combustible) params.set('tipoCombustible', combustible);
+      if (transmision) params.set('tipoTransmision', transmision);
+      if (minAnio) params.set('minAnio', minAnio);
+      if (maxAnio) params.set('maxAnio', maxAnio);
+      if (minPrecio) params.set('minPrecio', minPrecio);
+      if (maxPrecio) params.set('maxPrecio', maxPrecio);
+      return params.toString();
+    }
+
+    function escapeHtml(s) {
+      if (!s) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    function formatNumber(n) {
+      if (n == null) return '0';
+      return Number(n).toLocaleString('es-CR');
+    }
+
+    async function loadVehiculosInicio() {
+      const container = document.getElementById('vehiculosInicio');
+      const more = document.getElementById('vehiculosInicioMore');
+      if (!container) return;
+
+      container.innerHTML = '<p class="dashboard-vehicles-loading" id="vehiculosInicioLoading">Cargando vehículos...</p>';
+      if (more) more.style.display = 'none';
+
+      const query = getFilterParams();
+      const url = API_BASE + '/autos' + (query ? '?' + query : '');
+
+      try {
+        const resp = await fetch(url);
+        const result = await resp.json().catch(() => ({}));
+        const loading = document.getElementById('vehiculosInicioLoading');
+        if (loading) loading.remove();
+
+        if (!resp.ok) {
+          container.innerHTML = '<p class="empty-state">No se pudieron cargar los vehículos. Comprueba que el backend esté en marcha.</p>';
+          return;
+        }
+        const autos = result.data || result.autos || [];
+
+        if (autos.length === 0) {
+          container.innerHTML = '<p class="empty-state">No hay vehículos que coincidan con los filtros. Prueba ampliando criterios o limpia los filtros.</p>';
+          return;
+        }
+
+        container.innerHTML = autos.map(auto => {
+          const id = auto._id || auto.id;
+          const fotoUrl = auto.fotos && auto.fotos[0] ? API_ORIGIN + auto.fotos[0] : null;
+          const owner = auto.owner_id?.nombre || auto.owner_id?.username || 'Anunciante';
+          return `<a href="pages/vehiculo.html?id=${id}" class="vehicle-card">
+            <div class="vehicle-card-img">${fotoUrl ? `<img src="${escapeHtml(fotoUrl)}" alt="">` : '<span class="vehicle-card-noimg">Sin foto</span>'}
+            </div>
+            <div class="vehicle-card-body">
+              <span class="vehicle-card-title">${escapeHtml(auto.marca || '')} ${escapeHtml(auto.modelo || '')}</span>
+              <span class="vehicle-card-meta">${auto.anio || ''} · ₡${formatNumber(auto.precio)} · ${escapeHtml(auto.estado || 'disponible')}</span>
+              <span class="vehicle-card-owner">${escapeHtml(String(owner))}</span>
+            </div>
+          </a>`;
+        }).join('');
+
+        if (autos.length >= 12 && more) more.style.display = 'block';
+      } catch (err) {
+        console.error(err);
+        const loading = document.getElementById('vehiculosInicioLoading');
+        if (loading) loading.remove();
+        container.innerHTML = '<p class="empty-state">Error al cargar. Verifica que el servidor esté activo.</p>';
+      }
+    }
+  </script>
+</body>
+</html>
