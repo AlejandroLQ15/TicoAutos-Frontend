@@ -278,6 +278,7 @@ body {
   margin: 0 0 1rem;
 }
 
+<<<<<<< HEAD
 .card-title-row {
   display: flex;
   align-items: center;
@@ -297,6 +298,8 @@ body {
   gap: 0.5rem;
 }
 
+=======
+>>>>>>> 34efc35d7903b288a43069ea512a1b42d5c50908
 /* ----- Forms ----- */
 .form-group {
   margin-bottom: 1rem;
