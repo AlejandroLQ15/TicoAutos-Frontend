@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Crear vehículo - TicoAutos</title>
+  <title>Editar vehículo - TicoAutos</title>
   <link rel="stylesheet" href="../css/styles.css">
   <script src="../js/config.js"></script>
 </head>
@@ -19,11 +19,12 @@
     </header>
 
     <main class="app-main">
-      <h1 class="page-title">Crear vehículo</h1>
+      <h1 class="page-title">Editar vehículo</h1>
 
-      <section class="card">
-        <h2 class="card-title">Agregar vehículo</h2>
-        <form id="autoForm">
+      <section class="card" id="editCard">
+        <h2 class="card-title">Modificar datos</h2>
+        <p class="section-hint" id="loadHint">Cargando vehículo...</p>
+        <form id="autoForm" style="display: none;">
           <div class="form-row">
             <div class="form-group">
               <label class="form-label" for="marca">Marca</label>
@@ -92,12 +93,17 @@
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label" for="fotos">Fotos del vehículo</label>
+            <label class="form-label">Fotos actuales</label>
+            <div id="fotosActuales" class="edit-fotos-actuales"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="fotos">Reemplazar fotos (opcional)</label>
             <input type="file" id="fotos" name="fotos" class="form-input" accept="image/jpeg,image/png,image/gif,image/webp" multiple>
-            <span class="form-hint">Puedes elegir varias fotos a la vez (máximo 10). JPEG, PNG, GIF o WebP. Hasta 5 MB cada una.</span>
+            <span class="form-hint">Si eliges nuevas imágenes, reemplazarán las actuales. Puedes elegir varias (máximo 10). Hasta 5 MB cada una.</span>
           </div>
           <p id="formFeedback" class="form-feedback" role="alert" aria-live="polite"></p>
-          <button type="submit" class="btn btn-primary">Agregar vehículo</button>
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
+          <a href="vehiculos.html" class="btn btn-light" style="margin-left: 0.5rem;">Cancelar</a>
         </form>
       </section>
     </main>
@@ -116,10 +122,13 @@
 
   <script>
     const API_BASE = window.APP_CONFIG.API_BASE;
+    const API_ORIGIN = window.APP_CONFIG.API_ORIGIN;
     const AUTH_TOKEN_KEY = 'authToken';
     const AUTH_USER_KEY = 'authUser';
     const ESTADOS = ['disponible', 'reservado', 'vendido'];
     const MAX_FOTOS = 10;
+
+    let vehicleId = '';
 
     document.addEventListener('DOMContentLoaded', () => {
       const auth = getAuthContext();
@@ -136,6 +145,14 @@
         clearAuth();
         window.location.href = 'login.html';
       });
+
+      const params = new URLSearchParams(window.location.search);
+      vehicleId = params.get('id') || '';
+      if (!vehicleId) {
+        showError('No se indicó el vehículo a editar.');
+        return;
+      }
+      loadVehicle(auth);
     });
 
     function clearAuth() {
@@ -157,9 +174,69 @@
       }
     }
 
-    function setFormFeedback(message) {
-      const feedback = document.getElementById('formFeedback');
-      feedback.textContent = message || '';
+    function setFormFeedback(msg) {
+      document.getElementById('formFeedback').textContent = msg || '';
+    }
+
+    function showError(msg) {
+      document.getElementById('loadHint').textContent = msg;
+      document.getElementById('loadHint').innerHTML += ' <a href="vehiculos.html">Volver a Mis vehículos</a>';
+      document.getElementById('autoForm').style.display = 'none';
+    }
+
+    function escapeHtml(s) {
+      if (!s) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    async function loadVehicle(auth) {
+      const loadHint = document.getElementById('loadHint');
+      const form = document.getElementById('autoForm');
+      try {
+        const resp = await fetch(`${API_BASE}/autos/${vehicleId}`, {
+          headers: { 'Authorization': `Bearer ${auth.token}` }
+        });
+        const result = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          showError(result.message || 'No se pudo cargar el vehículo.');
+          return;
+        }
+        const vehicle = result.data || result;
+        const ownerId = String(vehicle.owner_id?._id || vehicle.owner_id?.id || vehicle.owner_id || '').trim();
+        const userId = String(auth.user?.id || auth.user?._id || '').trim();
+        if (ownerId !== userId) {
+          showError('No tienes permiso para editar este vehículo.');
+          return;
+        }
+
+        document.getElementById('marca').value = vehicle.marca || '';
+        document.getElementById('modelo').value = vehicle.modelo || '';
+        document.getElementById('anio').value = vehicle.anio ?? '';
+        document.getElementById('precio').value = vehicle.precio ?? '';
+        document.getElementById('kilometraje').value = vehicle.kilometraje != null ? vehicle.kilometraje : '';
+        document.getElementById('tipoCombustible').value = vehicle.tipoCombustible || '';
+        document.getElementById('tipoTransmision').value = vehicle.tipoTransmision || '';
+        document.getElementById('provincia').value = vehicle.provincia || '';
+        document.getElementById('estado').value = vehicle.estado || 'disponible';
+
+        const fotosActualesEl = document.getElementById('fotosActuales');
+        const fotos = vehicle.fotos && Array.isArray(vehicle.fotos) ? vehicle.fotos : [];
+        if (fotos.length > 0) {
+          fotosActualesEl.innerHTML = fotos.map((path, i) =>
+            `<img src="${API_ORIGIN}${path}" alt="Foto ${i + 1}" class="edit-foto-thumb">`
+          ).join('');
+        } else {
+          fotosActualesEl.innerHTML = '<span class="form-hint">Sin fotos cargadas.</span>';
+        }
+
+        loadHint.style.display = 'none';
+        form.style.display = 'block';
+      } catch (err) {
+        console.error(err);
+        showError('Error al cargar el vehículo.');
+      }
     }
 
     function validateForm() {
@@ -169,12 +246,9 @@
       const precio = parseFloat(document.getElementById('precio').value);
       const estado = document.getElementById('estado').value;
       const fotosInput = document.getElementById('fotos');
-
       if (!marca || !modelo) return 'Marca y modelo son obligatorios.';
       const currentYear = new Date().getFullYear() + 1;
-      if (!Number.isInteger(anio) || anio < 1900 || anio > currentYear) {
-        return `El año debe estar entre 1900 y ${currentYear}.`;
-      }
+      if (!Number.isInteger(anio) || anio < 1900 || anio > currentYear) return `El año debe estar entre 1900 y ${currentYear}.`;
       if (!Number.isFinite(precio) || precio <= 0) return 'El precio debe ser mayor que 0.';
       if (estado && !ESTADOS.includes(estado)) return 'Estado inválido.';
       if (fotosInput.files.length > MAX_FOTOS) return `Máximo ${MAX_FOTOS} fotos.`;
@@ -185,20 +259,16 @@
       e.preventDefault();
       const auth = getAuthContext();
       if (!auth) {
-        alert('Debes iniciar sesión para agregar un vehículo.');
         window.location.href = 'login.html';
         return;
       }
-
-      const validationError = validateForm();
-      if (validationError) {
-        setFormFeedback(validationError);
+      const err = validateForm();
+      if (err) {
+        setFormFeedback(err);
         return;
       }
-
       setFormFeedback('');
 
-      const form = document.getElementById('autoForm');
       const formData = new FormData();
       formData.append('marca', document.getElementById('marca').value.trim());
       formData.append('modelo', document.getElementById('modelo').value.trim());
@@ -206,34 +276,27 @@
       formData.append('precio', document.getElementById('precio').value);
       formData.append('estado', document.getElementById('estado').value || 'disponible');
       const km = document.getElementById('kilometraje').value.trim();
-      if (km) formData.append('kilometraje', km);
-      const combustible = document.getElementById('tipoCombustible').value;
-      if (combustible) formData.append('tipoCombustible', combustible);
-      const transmision = document.getElementById('tipoTransmision').value;
-      if (transmision) formData.append('tipoTransmision', transmision);
-      const provincia = document.getElementById('provincia').value;
-      if (provincia) formData.append('provincia', provincia);
+      formData.append('kilometraje', km || '');
+      formData.append('tipoCombustible', document.getElementById('tipoCombustible').value || '');
+      formData.append('tipoTransmision', document.getElementById('tipoTransmision').value || '');
+      formData.append('provincia', document.getElementById('provincia').value || '');
       const fotosInput = document.getElementById('fotos');
       for (let i = 0; i < Math.min(fotosInput.files.length, MAX_FOTOS); i++) {
         formData.append('fotos', fotosInput.files[i]);
       }
 
       try {
-        const resp = await fetch(`${API_BASE}/autos`, {
-          method: 'POST',
+        const resp = await fetch(`${API_BASE}/autos/${vehicleId}`, {
+          method: 'PUT',
           headers: { 'Authorization': `Bearer ${auth.token}` },
           body: formData
         });
-
         const data = await resp.json().catch(() => ({}));
-        if (!resp.ok) {
-          throw new Error(data.message || 'Error al guardar');
-        }
-
-        form.reset();
-        setFormFeedback('Vehículo registrado con éxito.');
+        if (!resp.ok) throw new Error(data.message || 'Error al guardar');
+        setFormFeedback('Cambios guardados correctamente.');
+        setTimeout(() => { window.location.href = 'vehiculos.html'; }, 1500);
       } catch (err) {
-        setFormFeedback(err.message || 'Error al agregar vehículo');
+        setFormFeedback(err.message || 'Error al guardar cambios');
       }
     });
   </script>
