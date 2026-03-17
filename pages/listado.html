@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Listado de vehículos - TicoAutos</title>
   <link rel="stylesheet" href="../css/styles.css">
+  <script src="../js/config.js"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -13,49 +14,151 @@
         <a href="../index.html" class="app-brand">
           <img src="../assets/TicoAutos_Logo.png" alt="TicoAutos" class="app-brand-logo">
         </a>
-        <nav class="app-nav" id="appNav">
-          <a href="../index.html">Inicio</a>
-          <a href="crear-vehiculo.html">Crear vehículo</a>
-          <a href="vehiculos.html">Mis vehículos</a>
-          <a href="listado.html" class="nav-active">Listado</a>
-          <a href="inbox.html">Inbox</a>
-        </nav>
+        <nav class="app-nav" id="appNav"></nav>
       </div>
     </header>
 
     <main class="app-main">
       <h1 class="page-title">Listado general</h1>
 
+      <section class="card filters-card">
+        <h2 class="card-title">Filtrar vehículos</h2>
+        <p class="section-hint">Los filtros se aplican en el servidor. Puedes combinar varios.</p>
+        <form id="filtersForm" class="filters-form">
+          <div class="form-row form-row-wrap">
+            <div class="form-group">
+              <label class="form-label" for="fMarca">Marca</label>
+              <input type="text" id="fMarca" name="marca" class="form-input" placeholder="Ej. Toyota">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fModelo">Modelo</label>
+              <input type="text" id="fModelo" name="modelo" class="form-input" placeholder="Ej. Corolla">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fMinAnio">Año desde</label>
+              <input type="number" id="fMinAnio" name="minAnio" class="form-input" placeholder="Ej. 2015" min="1900" max="2100">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fMaxAnio">Año hasta</label>
+              <input type="number" id="fMaxAnio" name="maxAnio" class="form-input" placeholder="Ej. 2024" min="1900" max="2100">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fMinPrecio">Precio mín. (₡)</label>
+              <input type="number" id="fMinPrecio" name="minPrecio" class="form-input" placeholder="Ej. 0" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fMaxPrecio">Precio máx. (₡)</label>
+              <input type="number" id="fMaxPrecio" name="maxPrecio" class="form-input" placeholder="Ej. 20000000" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fCombustible">Combustible</label>
+              <select id="fCombustible" name="tipoCombustible" class="form-select">
+                <option value="">Todos</option>
+                <option value="gasolina">Gasolina</option>
+                <option value="diesel">Diesel</option>
+                <option value="hibrido">Híbrido</option>
+                <option value="electrico">Eléctrico</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fTransmision">Transmisión</label>
+              <select id="fTransmision" name="tipoTransmision" class="form-select">
+                <option value="">Todos</option>
+                <option value="automatico">Automático</option>
+                <option value="manual">Manual</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fEstado">Estado</label>
+              <select id="fEstado" name="estado" class="form-select">
+                <option value="">Todos</option>
+                <option value="disponible">Disponible</option>
+                <option value="reservado">Reservado</option>
+                <option value="vendido">Vendido</option>
+              </select>
+            </div>
+            <div class="form-group form-group-actions">
+              <button type="submit" class="btn btn-primary">Buscar</button>
+              <button type="button" id="clearFiltersBtn" class="btn btn-light">Limpiar</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
       <section class="card">
         <h2 class="card-title">Vehículos registrados</h2>
-        <p class="section-hint">Esta vista muestra todos los vehículos publicados en la plataforma.</p>
+        <p class="section-hint" id="listHint">Esta vista es pública. Los filtros se aplican en el backend.</p>
         <ul id="autosList" class="autos-list"></ul>
+        <nav id="paginationNav" class="pagination-nav" aria-label="Paginación"></nav>
       </section>
     </main>
+
+    <footer class="app-footer">
+      <div class="app-footer-inner">
+        <div class="app-footer-col">
+          <div class="app-footer-brand">
+            <img src="../assets/TicoAutos_Logo.png" alt="TicoAutos">
+          </div>
+          <p class="app-footer-about">TicoAutos es tu plataforma para comprar y vender vehículos en Costa Rica. Encuentra el auto ideal o publica el tuyo de forma segura y sencilla.</p>
+        </div>
+        <div class="app-footer-col">
+          <h4>Enlaces</h4>
+          <div class="app-footer-links">
+            <a href="../index.html">Inicio</a>
+            <a href="listado.html">Ver vehículos</a>
+            <a href="crear-vehiculo.html">Publicar vehículo</a>
+            <a href="inbox.html">Mensajes</a>
+            <a href="login.html">Iniciar sesión</a>
+            <a href="registro.html">Registrarse</a>
+          </div>
+        </div>
+        <div class="app-footer-col">
+          <h4>Contacto</h4>
+          <ul class="app-footer-contact">
+            <li>📧 info@ticoautos.com</li>
+            <li>📍 Costa Rica</li>
+          </ul>
+        </div>
+        <div class="app-footer-bottom">
+          <p class="app-footer-copy">© 2025 TicoAutos · Programación en Ambiente Web</p>
+          <div class="app-footer-social">
+            <a href="#" aria-label="Facebook">f</a>
+            <a href="#" aria-label="Instagram">ig</a>
+          </div>
+        </div>
+      </div>
+    </footer>
   </div>
 
   <script>
-    const API_BASE = 'http://localhost:3000/api';
+    const API_BASE = window.APP_CONFIG.API_BASE;
     const AUTH_TOKEN_KEY = 'authToken';
     const AUTH_USER_KEY = 'authUser';
+    const DEFAULT_PAGE = 1;
+    const DEFAULT_LIMIT = 10;
 
     document.addEventListener('DOMContentLoaded', () => {
-      const auth = getAuthContext();
-      if (!auth) {
-        window.location.replace('login.html');
-        return;
-      }
-
-      const nav = document.getElementById('appNav');
-      nav.innerHTML = '<a href="../index.html">Inicio</a><a href="crear-vehiculo.html">Crear vehículo</a><a href="vehiculos.html">Mis vehículos</a><a href="listado.html" class="nav-active">Listado</a><a href="inbox.html">Inbox</a><a href="#" id="logoutLink" class="nav-logout">Cerrar sesión</a>';
-      document.getElementById('logoutLink').addEventListener('click', e => {
-        e.preventDefault();
-        clearAuth();
-        window.location.href = 'login.html';
-      });
-
+      setupNav();
+      bindFilters();
+      applyFiltersFromUrl();
       cargarAutos();
     });
+
+    function setupNav() {
+      const auth = getAuthContext();
+      const nav = document.getElementById('appNav');
+      const logoutIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+      if (auth) {
+        nav.innerHTML = '<a href="../index.html">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger nav-active">Vehículos</span><div class="nav-dropdown-menu"><a href="vehiculos.html">Mis vehículos</a><a href="crear-vehiculo.html">Crear vehículo</a><a href="listado.html">Ver listado</a></div></div><a href="inbox.html">Mensajes</a><a href="perfil.html">Mi perfil</a><a href="#" id="logoutLink" class="nav-logout" title="Cerrar sesión" aria-label="Cerrar sesión">' + logoutIcon + '</a>';
+        document.getElementById('logoutLink').addEventListener('click', e => {
+          e.preventDefault();
+          clearAuth();
+          window.location.href = 'login.html';
+        });
+      } else {
+        nav.innerHTML = '<a href="../index.html">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger nav-active">Vehículos</span><div class="nav-dropdown-menu"><a href="listado.html">Ver listado</a></div></div><a href="registro.html">Registro</a><a href="login.html">Iniciar sesión</a>';
+      }
+    }
 
     function clearAuth() {
       localStorage.removeItem(AUTH_USER_KEY);
@@ -88,44 +191,144 @@
       return Number(n).toLocaleString('es-CR');
     }
 
-    async function cargarAutos() {
-      const list = document.getElementById('autosList');
-      const auth = getAuthContext();
-      if (!auth) {
-        window.location.replace('login.html');
+    function getQueryParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        marca: params.get('marca') || '',
+        modelo: params.get('modelo') || '',
+        minAnio: params.get('minAnio') || '',
+        maxAnio: params.get('maxAnio') || '',
+        minPrecio: params.get('minPrecio') || '',
+        maxPrecio: params.get('maxPrecio') || '',
+        tipoCombustible: params.get('tipoCombustible') || '',
+        tipoTransmision: params.get('tipoTransmision') || '',
+        estado: params.get('estado') || '',
+        page: Math.max(1, parseInt(params.get('page'), 10) || DEFAULT_PAGE),
+        limit: Math.min(100, Math.max(1, parseInt(params.get('limit'), 10) || DEFAULT_LIMIT))
+      };
+    }
+
+    function buildSearchParams(filters) {
+      const sp = new URLSearchParams();
+      if (filters.marca) sp.set('marca', filters.marca);
+      if (filters.modelo) sp.set('modelo', filters.modelo);
+      if (filters.minAnio) sp.set('minAnio', filters.minAnio);
+      if (filters.maxAnio) sp.set('maxAnio', filters.maxAnio);
+      if (filters.minPrecio) sp.set('minPrecio', filters.minPrecio);
+      if (filters.maxPrecio) sp.set('maxPrecio', filters.maxPrecio);
+      if (filters.tipoCombustible) sp.set('tipoCombustible', filters.tipoCombustible);
+      if (filters.tipoTransmision) sp.set('tipoTransmision', filters.tipoTransmision);
+      if (filters.estado) sp.set('estado', filters.estado);
+      sp.set('page', String(filters.page));
+      sp.set('limit', String(filters.limit));
+      return sp;
+    }
+
+    function applyFiltersFromUrl() {
+      const q = getQueryParams();
+      document.getElementById('fMarca').value = q.marca;
+      document.getElementById('fModelo').value = q.modelo;
+      document.getElementById('fMinAnio').value = q.minAnio;
+      document.getElementById('fMaxAnio').value = q.maxAnio;
+      document.getElementById('fMinPrecio').value = q.minPrecio;
+      document.getElementById('fMaxPrecio').value = q.maxPrecio;
+      document.getElementById('fCombustible').value = q.tipoCombustible;
+      document.getElementById('fTransmision').value = q.tipoTransmision;
+      document.getElementById('fEstado').value = q.estado;
+    }
+
+    function bindFilters() {
+      document.getElementById('filtersForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const q = {
+          marca: document.getElementById('fMarca').value.trim(),
+          modelo: document.getElementById('fModelo').value.trim(),
+          minAnio: document.getElementById('fMinAnio').value.trim(),
+          maxAnio: document.getElementById('fMaxAnio').value.trim(),
+          minPrecio: document.getElementById('fMinPrecio').value.trim(),
+          maxPrecio: document.getElementById('fMaxPrecio').value.trim(),
+          tipoCombustible: document.getElementById('fCombustible').value.trim(),
+          tipoTransmision: document.getElementById('fTransmision').value.trim(),
+          estado: document.getElementById('fEstado').value.trim(),
+          page: 1,
+          limit: getQueryParams().limit
+        };
+        const search = buildSearchParams(q).toString();
+        window.location.search = search ? '?' + search : '';
+      });
+
+      document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+        window.location.search = '';
+      });
+    }
+
+    function renderPagination(page, totalPages, totalItems) {
+      const nav = document.getElementById('paginationNav');
+      if (totalPages <= 1 && totalItems <= 0) {
+        nav.innerHTML = '';
         return;
       }
+      const q = getQueryParams();
+      const prevPage = page - 1;
+      const nextPage = page + 1;
+      let html = '<div class="pagination-info">Página ' + page + ' de ' + totalPages + ' (' + totalItems + ' en total)</div>';
+      html += '<div class="pagination-btns">';
+      if (prevPage >= 1) {
+        q.page = prevPage;
+        html += '<a href="?' + buildSearchParams(q).toString() + '" class="btn btn-light btn-sm">Anterior</a>';
+      }
+      if (nextPage <= totalPages) {
+        q.page = nextPage;
+        html += '<a href="?' + buildSearchParams(q).toString() + '" class="btn btn-light btn-sm">Siguiente</a>';
+      }
+      html += '</div>';
+      nav.innerHTML = html;
+    }
+
+    async function cargarAutos() {
+      const list = document.getElementById('autosList');
+      const q = getQueryParams();
+      const search = buildSearchParams(q).toString();
+      const url = API_BASE + '/autos' + (search ? '?' + search : '');
 
       try {
-        const resp = await fetch(`${API_BASE}/autos`, {
-          headers: { 'Authorization': `Bearer ${auth.token}` }
-        });
-
+        const resp = await fetch(url);
         const result = await resp.json().catch(() => ({}));
         if (!resp.ok) {
           throw new Error(result.message || 'No se pudieron cargar los vehículos.');
         }
 
         const autos = result.data || result.autos || [];
+        const page = result.page || 1;
+        const totalPages = result.totalPages || 1;
+        const totalItems = result.totalItems !== undefined ? result.totalItems : autos.length;
+
         if (autos.length === 0) {
-          list.innerHTML = '<li class="empty-state">No hay vehículos publicados por el momento.</li>';
-          return;
+          list.innerHTML = '<li class="empty-state">No hay vehículos que coincidan con los filtros.</li>';
+        } else {
+          const API_ORIGIN = window.APP_CONFIG.API_ORIGIN;
+          list.innerHTML = autos.map(auto => {
+            const owner = auto.owner_id;
+            const ownerLabel = owner?.nombre || owner?.username || owner || 'Sin propietario';
+            const fotoUrl = auto.fotos && auto.fotos[0] ? API_ORIGIN + auto.fotos[0] : null;
+            const transmisionLabel = auto.tipoTransmision === 'automatico' ? 'Automático' : auto.tipoTransmision === 'manual' ? 'Manual' : '';
+            const extra = [auto.kilometraje != null ? auto.kilometraje.toLocaleString('es-CR') + ' km' : '', auto.tipoCombustible || '', transmisionLabel, auto.provincia || ''].filter(Boolean).join(' · ');
+            return `<li class="auto-item auto-item-with-photo">
+              ${fotoUrl ? `<img src="${escapeHtml(fotoUrl)}" alt="" class="auto-thumb">` : ''}
+              <div>
+                <span class="auto-info">${escapeHtml(auto.marca)} ${escapeHtml(auto.modelo)}</span>
+                <span class="auto-meta">${auto.anio || ''} · ₡${formatNumber(auto.precio)} · ${escapeHtml(auto.estado || 'disponible')}${extra ? ' · ' + escapeHtml(extra) : ''} · ${escapeHtml(String(ownerLabel))}</span>
+              </div>
+              <div class="auto-actions"><a class="btn btn-light btn-sm" href="vehiculo.html?id=${auto._id || auto.id}">Ver vehículo</a></div>
+            </li>`;
+          }).join('');
         }
 
-        list.innerHTML = autos.map(auto => {
-          const owner = auto.owner_id;
-          const ownerLabel = owner?.nombre || owner?.username || owner || 'Sin propietario';
-          return `<li class="auto-item">
-            <div>
-              <span class="auto-info">${escapeHtml(auto.marca)} ${escapeHtml(auto.modelo)}</span>
-              <span class="auto-meta">${auto.anio || ''} · ₡${formatNumber(auto.precio)} · ${escapeHtml(auto.estado || 'disponible')} · ${escapeHtml(String(ownerLabel))}</span>
-            </div>
-            <div class="auto-actions"><a class="btn btn-light btn-sm" href="vehiculo.html?id=${auto._id || auto.id}">Ver vehículo</a></div>
-          </li>`;
-        }).join('');
+        renderPagination(page, totalPages, totalItems);
       } catch (err) {
         console.error(err);
-        list.innerHTML = `<li class="empty-state">${escapeHtml(err.message || 'Error al cargar vehículos.')}</li>`;
+        list.innerHTML = '<li class="empty-state">' + escapeHtml(err.message || 'Error al cargar vehículos.') + '</li>';
+        document.getElementById('paginationNav').innerHTML = '';
       }
     }
   </script>
