@@ -7,9 +7,10 @@
   <title>Registro - TicoAutos</title>
   
   <link rel="stylesheet" href="../css/login.css">
-
+  <script src="../js/config.js"></script>
 </head>
 <body class="auth-page">
+  <div class="auth-page-inner">
   <div class="auth-wrapper">
     <div class="auth-card">
       <div class="auth-header">
@@ -36,12 +37,25 @@
 
       <div class="auth-footer">
         <p>¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
+        <p><a href="listado.html">Ver listado de vehículos</a> (sin iniciar sesión)</p>
       </div>
     </div>
   </div>
 
+  <footer class="app-footer app-footer-auth">
+    <div class="app-footer-inner">
+      <p class="app-footer-copy">© 2025 TicoAutos · Programación en Ambiente Web</p>
+      <div class="app-footer-links">
+        <a href="../index.html">Inicio</a>
+        <a href="listado.html">Vehículos</a>
+        <a href="inbox.html">Mensajes</a>
+      </div>
+    </div>
+  </footer>
+  </div>
+
   <script>
-    const REGISTER_URL = 'http://localhost:3000/api/users/register';
+    const REGISTER_URL = window.APP_CONFIG.API_BASE + '/users/register';
 
     document.getElementById('registroForm').addEventListener('submit', async function(event) {
       event.preventDefault();
@@ -68,7 +82,11 @@
         window.location.href = 'login.html';
       } catch (err) {
         console.error('Error en registro', err);
-        alert('Hubo un error al registrar: ' + err.message);
+        if (err.message === 'Load failed' || err.name === 'TypeError') {
+          alert('No se pudo conectar al servidor. Comprueba que el backend esté en marcha (npm start en TicoAutos-Backend-main) y que MongoDB esté activo.');
+        } else {
+          alert('Hubo un error al registrar: ' + err.message);
+        }
       }
     });
   </script>

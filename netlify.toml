@@ -1,0 +1,5 @@
+# Despliegue estático en Netlify (sin build).
+# Publicar la raíz del frontend donde está index.html.
+[build]
+  publish = "."
+  command = ""
