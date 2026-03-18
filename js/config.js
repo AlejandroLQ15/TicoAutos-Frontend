@@ -8,7 +8,7 @@
   'use strict';
   var isLocal = /localhost|127\.0\.0\.1/i.test(window.location.hostname);
   window.APP_CONFIG = window.APP_CONFIG || {
-    API_BASE: isLocal ? 'http://localhost:3000/api' : 'https://tu-backend.onrender.com/api',
-    API_ORIGIN: isLocal ? 'http://localhost:3000' : 'https://tu-backend.onrender.com'
+    API_BASE: isLocal ? 'http://localhost:3000/api' : 'https://ticoautos-backend-api.onrender.com/api',
+    API_ORIGIN: isLocal ? 'http://localhost:3000' : 'https://ticoautos-backend-api.onrender.com'
   };
 })();

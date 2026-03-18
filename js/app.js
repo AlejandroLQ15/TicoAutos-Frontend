@@ -1,9 +1,14 @@
-// Envía un POST JSON a http://localhost:3000/api/users
+// Envía un POST JSON al endpoint configurado en APP_CONFIG.API_BASE
 // Retorna el cuerpo de la respuesta o lanza un error si algo falla.
 
 //Función para registrar un nuevo usuario, recibe el nombre de usuario, contraseña y nombre completo.
 export async function registrarUsuario(usuario, contrasena, nombre) {
-  const url = 'http://localhost:3000/api/users/register';
+  const isLocal = (typeof window !== 'undefined') && /localhost|127\.0\.0\.1/i.test(window.location.hostname);
+  const fallbackBase = isLocal ? 'http://localhost:3000/api' : 'https://ticoautos-backend-api.onrender.com/api';
+  const apiBase = (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.API_BASE)
+    ? String(window.APP_CONFIG.API_BASE).replace(/\/$/, '')
+    : fallbackBase;
+  const url = `${apiBase}/users/register`;
   try {
     const resp = await fetch(url, {
       method: 'POST',
