@@ -58,9 +58,9 @@
       <div class="app-footer-inner">
         <p class="app-footer-copy">© 2025 TicoAutos · Programación en Ambiente Web</p>
         <div class="app-footer-links">
-          <a href="../index.html">Inicio</a>
-          <a href="listado.html">Vehículos</a>
-          <a href="inbox.html">Mensajes</a>
+          <a href="/index.html">Inicio</a>
+          <a href="/pages/listado.html">Vehículos</a>
+          <a href="/pages/inbox.html">Mensajes</a>
         </div>
       </div>
     </footer>
@@ -155,19 +155,19 @@
       const nav = document.getElementById('appNav');
       const logoutIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
       if (auth) {
-        nav.innerHTML = '<a href="../index.html">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger">Vehículos</span><div class="nav-dropdown-menu"><a href="vehiculos.html">Mis vehículos</a><a href="crear-vehiculo.html">Crear vehículo</a><a href="listado.html">Ver listado</a></div></div><a href="inbox.html">Mensajes</a><a href="perfil.html">Mi perfil</a><a href="#" id="logoutLink" class="nav-logout" title="Cerrar sesión" aria-label="Cerrar sesión">' + logoutIcon + '</a>';
+        nav.innerHTML = '<a href="/index.html">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger">Vehículos</span><div class="nav-dropdown-menu"><a href="/pages/vehiculos.html">Mis vehículos</a><a href="/pages/crear-vehiculo.html">Crear vehículo</a><a href="/pages/listado.html">Ver listado</a></div></div><a href="/pages/inbox.html">Mensajes</a><a href="/pages/perfil.html">Mi perfil</a><a href="#" id="logoutLink" class="nav-logout" title="Cerrar sesión" aria-label="Cerrar sesión">' + logoutIcon + '</a>';
         document.getElementById('logoutLink').addEventListener('click', event => {
           event.preventDefault();
           clearAuth();
           redirectToLogin();
         });
       } else {
-        nav.innerHTML = '<a href="../index.html">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger">Vehículos</span><div class="nav-dropdown-menu"><a href="listado.html">Ver listado</a></div></div><a href="registro.html">Registro</a><a href="login.html">Iniciar sesión</a>';
+        nav.innerHTML = '<a href="/index.html">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger">Vehículos</span><div class="nav-dropdown-menu"><a href="/pages/listado.html">Ver listado</a></div></div><a href="/pages/registro.html">Registro</a><a href="/pages/login.html">Iniciar sesión</a>';
       }
     }
 
     function redirectToLogin() {
-      window.location.replace('login.html');
+      window.location.replace('/pages/login.html');
     }
 
     function clearAuth() {
@@ -253,7 +253,17 @@
 
     function getVehiculoIdFromQuery() {
       const params = new URLSearchParams(window.location.search);
-      return params.get('id') || '';
+      const queryId = params.get('id');
+      if (queryId) return queryId;
+
+      // Permite URL publica tipo /vehicles/:id
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      const vehiclesIndex = parts.findIndex((part) => part.toLowerCase() === 'vehicles');
+      if (vehiclesIndex >= 0 && parts[vehiclesIndex + 1]) {
+        return decodeURIComponent(parts[vehiclesIndex + 1]);
+      }
+
+      return '';
     }
 
     async function getVehicleById(auth, vehicleId) {

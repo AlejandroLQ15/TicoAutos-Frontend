@@ -242,7 +242,7 @@
         const title = `${auto.marca || ''} ${auto.modelo || ''}`.trim();
         blocks.push(`<article class="inbox-vehicle-block">
           <h3 class="inbox-vehicle-title">${escapeHtml(title || 'Vehículo')}</h3>
-          <p class="conversation-meta">${auto.anio || ''} · Estado: ${escapeHtml(auto.estado || 'disponible')} · <a href="vehiculo.html?id=${autoId}" class="inline-link">Ver vehículo y responder</a></p>
+          <p class="conversation-meta">${auto.anio || ''} · Estado: ${escapeHtml(auto.estado || 'disponible')} · <a href="/vehicles/${encodeURIComponent(autoId)}" class="inline-link">Ver vehículo y responder</a></p>
           ${items.length ? `<ul class="conversation-list conversation-list-with-avatars">${items.join('')}</ul>` : '<div class="empty-inline">Sin preguntas en este vehículo.</div>'}
         </article>`);
       }
@@ -276,7 +276,7 @@
                 <span class="conversation-role">${escapeHtml(ownerName)} (vendedor)</span>
                 <span class="conversation-date">${new Date(question.fecha_pregunta || Date.now()).toLocaleString('es-CR')}</span>
               </div>
-              <p class="conversation-meta">Vehículo: <a class="inline-link" href="vehiculo.html?id=${vehicleId}">${escapeHtml(String(vehicleName).trim())}</a></p>
+              <p class="conversation-meta">Vehículo: <a class="inline-link" href="/vehicles/${encodeURIComponent(vehicleId)}">${escapeHtml(String(vehicleName).trim())}</a></p>
               <p class="conversation-text">${escapeHtml(questionText)}</p>
               ${answer ? `<div class="answer-box answer-with-avatar"><p class="answer-title">Respuesta de ${escapeHtml(responder?.nombre || responder?.username || 'propietario')}</p><p class="conversation-text">${escapeHtml(answer.texto_respuesta || answer.respuesta || '')}</p><p class="conversation-date">${new Date(answer.fecha_respuesta || Date.now()).toLocaleString('es-CR')}</p></div>` : '<p class="pending-answer">Aún no has recibido respuesta.</p>'}
             </div>

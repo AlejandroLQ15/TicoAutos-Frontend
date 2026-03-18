@@ -381,7 +381,7 @@
           const id = auto._id || auto.id;
           const fotoUrl = auto.fotos && auto.fotos[0] ? API_ORIGIN + auto.fotos[0] : null;
           const owner = auto.owner_id?.nombre || auto.owner_id?.username || 'Anunciante';
-          return `<a href="pages/vehiculo.html?id=${id}" class="vehicle-card">
+          return `<a href="/vehicles/${encodeURIComponent(id)}" class="vehicle-card">
             <div class="vehicle-card-img">${fotoUrl ? `<img src="${escapeHtml(fotoUrl)}" alt="">` : '<span class="vehicle-card-noimg">Sin foto</span>'}
             </div>
             <div class="vehicle-card-body">

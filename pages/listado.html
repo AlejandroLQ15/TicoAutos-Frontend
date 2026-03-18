@@ -319,7 +319,7 @@
                 <span class="auto-info">${escapeHtml(auto.marca)} ${escapeHtml(auto.modelo)}</span>
                 <span class="auto-meta">${auto.anio || ''} · ₡${formatNumber(auto.precio)} · ${escapeHtml(auto.estado || 'disponible')}${extra ? ' · ' + escapeHtml(extra) : ''} · ${escapeHtml(String(ownerLabel))}</span>
               </div>
-              <div class="auto-actions"><a class="btn btn-light btn-sm" href="vehiculo.html?id=${auto._id || auto.id}">Ver vehículo</a></div>
+              <div class="auto-actions"><a class="btn btn-light btn-sm" href="/vehicles/${encodeURIComponent(auto._id || auto.id)}">Ver vehículo</a></div>
             </li>`;
           }).join('');
         }

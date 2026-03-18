@@ -160,7 +160,7 @@
               <span class="auto-status ${statusClass}">${statusLabel}</span>
             </div>
             <div class="auto-actions">
-              <a class="btn btn-light btn-sm" href="vehiculo.html?id=${autoId}">Ver vehículo</a>
+              <a class="btn btn-light btn-sm" href="/vehicles/${encodeURIComponent(autoId)}">Ver vehículo</a>
               <a class="btn btn-light btn-sm" href="editar-vehiculo.html?id=${autoId}">Editar</a>
               ${!sold ? `<button type="button" class="btn btn-secondary btn-sm" onclick="marcarComoVendido('${autoId}')">Marcar como vendido</button>` : ''}
               <button type="button" class="btn btn-danger btn-sm" onclick="eliminarAuto('${autoId}')">Eliminar</button>

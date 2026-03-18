@@ -3,3 +3,8 @@
 [build]
   publish = "."
   command = ""
+
+[[redirects]]
+  from = "/vehicles/:id"
+  to = "/pages/vehiculo.html?id=:id"
+  status = 200
