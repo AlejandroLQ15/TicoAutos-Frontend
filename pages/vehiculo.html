@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vehículo - TicoAutos</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="app-header-inner">
+        <a href="../index.html" class="app-brand">
+          <img src="../assets/TicoAutos_Logo.png" alt="TicoAutos" class="app-brand-logo">
+        </a>
+        <nav class="app-nav" id="appNav"></nav>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <h1 class="page-title">Vista del vehículo</h1>
+
+      <section class="card" id="vehiculoCard">
+        <div class="card-title-row">
+          <h2 class="card-title">Detalle</h2>
+          <div class="card-title-actions">
+            <a id="editVehicleLink" href="#" class="btn btn-light btn-sm" style="display: none;">Editar</a>
+            <button type="button" id="shareLinkBtn" class="btn btn-light btn-sm" title="Copiar enlace para compartir">Compartir · Copiar enlace</button>
+          </div>
+        </div>
+        <p class="section-hint" id="vehiculoMeta">Cargando información del vehículo...</p>
+        <div id="vehiculoDetail" class="vehiculo-detail"></div>
+      </section>
+
+      <section class="card card-conversation">
+        <h2 class="card-title">Mensajes con el propietario</h2>
+        <p class="section-hint" id="questionsHint">Las conversaciones son privadas: solo tú y el propietario pueden verlas.</p>
+
+        <form id="questionForm" class="question-form" style="display: none;">
+          <div class="form-group">
+            <label class="form-label" for="preguntaTexto">Haz una pregunta sobre este vehículo</label>
+            <div class="suggested-chips" id="suggestedQuestionsChips"></div>
+            <textarea id="preguntaTexto" class="form-textarea" rows="3" maxlength="300" placeholder="Escribe tu pregunta o elige una sugerencia abajo"></textarea>
+          </div>
+          <p id="questionFeedback" class="form-feedback" role="alert" aria-live="polite"></p>
+          <button type="submit" class="btn btn-primary">Enviar pregunta</button>
+        </form>
+
+        <div id="questionsPrivateNotice" class="conversation-private-notice" style="display: none;">
+          <p>Inicia sesión para ver y enviar preguntas. Las conversaciones son <strong>privadas</strong> entre tú y el propietario.</p>
+        </div>
+        <ul id="questionsList" class="conversation-list conversation-list-with-avatars"></ul>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <div class="app-footer-inner">
+        <p class="app-footer-copy">© 2025 TicoAutos · Programación en Ambiente Web</p>
+        <div class="app-footer-links">
+          <a href="/index.html">Inicio</a>
+          <a href="/pages/listado.html">Vehículos</a>
+          <a href="/pages/inbox.html">Mensajes</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const API_BASE = window.APP_CONFIG.API_BASE;
+    const API_ORIGIN = window.APP_CONFIG.API_ORIGIN;
+    const AUTH_TOKEN_KEY = 'authToken';
+    const AUTH_USER_KEY = 'authUser';
+    const MIN_QUESTION_LENGTH = 8;
+    const SUGERENCIAS_PREGUNTAS = [
+      '¿El precio es negociable?',
+      '¿Cuántos kilómetros tiene actualmente?',
+      '¿Tiene factura de compra?',
+      '¿Por qué motivo lo vende?',
+      '¿Puedo verlo en persona? ¿En qué provincia está?',
+      '¿Tiene algún detalle mecánico o de carrocería?',
+      '¿Cuántos dueños ha tenido?',
+      '¿Incluye algún extra o accesorio?',
+      '¿Está disponible para prueba de manejo?',
+      '¿Acepta financiamiento o solo efectivo?'
+    ];
+    const SUGERENCIAS_RESPUESTAS = [
+      'Sí, podemos negociar el precio.',
+      'El vehículo está en muy buen estado.',
+      'Puedes verlo en persona, con gusto coordinamos.',
+      'Sí, tiene factura y papeles al día.',
+      'Lo vendo por renovación, no por fallas.',
+      'No tiene detalles mecánicos ni de carrocería.',
+      'Solo acepto efectivo o transferencia.',
+      'Sí, incluye [especificar] si te interesa.'
+    ];
+
+    const vehicleMetaEl = document.getElementById('vehiculoMeta');
+    const questionsListEl = document.getElementById('questionsList');
+    const questionFormEl = document.getElementById('questionForm');
+    const questionInputEl = document.getElementById('preguntaTexto');
+    const feedbackEl = document.getElementById('questionFeedback');
+
+    // Se guarda el ID del dueño al cargar el vehículo para incluirlo en cada pregunta.
+    let currentVehicleOwnerId = '';
+    let currentUserIsVehicleOwner = false;
+
+    document.addEventListener('DOMContentLoaded', init);
+
+    function init() {
+      const auth = getAuth();
+      setupNav(auth);
+      loadVehiclePage(auth);
+
+      document.getElementById('shareLinkBtn').addEventListener('click', copyShareLink);
+
+      if (auth) {
+        questionFormEl.addEventListener('submit', event => submitQuestion(event, auth));
+        questionsListEl.addEventListener('submit', event => submitAnswer(event, auth));
+      }
+    }
+
+    function copyShareLink() {
+      const url = window.location.href;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          const btn = document.getElementById('shareLinkBtn');
+          const prev = btn.textContent;
+          btn.textContent = '¡Enlace copiado!';
+          setTimeout(() => { btn.textContent = prev; }, 2000);
+        }).catch(() => fallbackCopy(url));
+      } else {
+        fallbackCopy(url);
+      }
+    }
+
+    function fallbackCopy(url) {
+      const ta = document.createElement('textarea');
+      ta.value = url;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        const btn = document.getElementById('shareLinkBtn');
+        const prev = btn.textContent;
+        btn.textContent = '¡Enlace copiado!';
+        setTimeout(() => { btn.textContent = prev; }, 2000);
+      } catch (e) { /* ignore */ }
+      document.body.removeChild(ta);
+    }
+
+    function setupNav(auth) {
+      const nav = document.getElementById('appNav');
+      const logoutIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+      if (auth) {
+        nav.innerHTML = '<a href="/index.html">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger">Vehículos</span><div class="nav-dropdown-menu"><a href="/pages/vehiculos.html">Mis vehículos</a><a href="/pages/crear-vehiculo.html">Crear vehículo</a><a href="/pages/listado.html">Ver listado</a></div></div><a href="/pages/inbox.html">Mensajes</a><a href="/pages/perfil.html">Mi perfil</a><a href="#" id="logoutLink" class="nav-logout" title="Cerrar sesión" aria-label="Cerrar sesión">' + logoutIcon + '</a>';
+        document.getElementById('logoutLink').addEventListener('click', event => {
+          event.preventDefault();
+          clearAuth();
+          redirectToLogin();
+        });
+      } else {
+        nav.innerHTML = '<a href="/index.html">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger">Vehículos</span><div class="nav-dropdown-menu"><a href="/pages/listado.html">Ver listado</a></div></div><a href="/pages/registro.html">Registro</a><a href="/pages/login.html">Iniciar sesión</a>';
+      }
+    }
+
+    function redirectToLogin() {
+      window.location.replace('/pages/login.html');
+    }
+
+    function clearAuth() {
+      localStorage.removeItem(AUTH_USER_KEY);
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+    }
+
+    function getAuth() {
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      const rawUser = localStorage.getItem(AUTH_USER_KEY);
+      if (!token || !rawUser) return null;
+
+      try {
+        const user = JSON.parse(rawUser);
+        if (!user || Object.keys(user).length === 0) return null;
+        return { token, user };
+      } catch {
+        clearAuth();
+        return null;
+      }
+    }
+
+    function getUserId(user) {
+      return String(user?._id || user?.id || user?.userId || '').trim();
+    }
+
+    function escapeHtml(s) {
+      if (!s) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    function formatNumber(n) {
+      if (n == null) return '0';
+      return Number(n).toLocaleString('es-CR');
+    }
+
+    function normalizeList(payload, keys) {
+      for (const key of keys) {
+        if (Array.isArray(payload?.[key])) return payload[key];
+      }
+      return [];
+    }
+
+    function normalizeObject(payload) {
+      if (!payload || typeof payload !== 'object') return null;
+      return payload.data || payload.answer || payload.auto || payload.question || payload;
+    }
+
+    async function api(path, auth, options = {}) {
+      const response = await fetch(`${API_BASE}${path}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth.token}`,
+          ...(options.headers || {})
+        }
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        console.error(`[API ${response.status}] ${path}`, data);
+        const msg = (typeof data === 'string' && data)
+          || data.message || data.msg || data.error || data.mensaje
+          || (typeof data.error === 'object' ? data.error?.message : '')
+          || (Array.isArray(data.errors) && data.errors.length
+               ? data.errors.map(e => e.msg || e.message || String(e)).join(', ')
+               : '')
+          || `Error ${response.status}`;
+        throw new Error(msg);
+      }
+
+      return data;
+    }
+
+    async function fetchPublic(path) {
+      const response = await fetch(`${API_BASE}${path}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.message || data.msg || `Error ${response.status}`);
+      return data;
+    }
+
+    function getVehiculoIdFromQuery() {
+      const params = new URLSearchParams(window.location.search);
+      const queryId = params.get('id');
+      if (queryId) return queryId;
+
+      // Permite URL publica tipo /vehicles/:id
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      const vehiclesIndex = parts.findIndex((part) => part.toLowerCase() === 'vehicles');
+      if (vehiclesIndex >= 0 && parts[vehiclesIndex + 1]) {
+        return decodeURIComponent(parts[vehiclesIndex + 1]);
+      }
+
+      return '';
+    }
+
+    async function getVehicleById(auth, vehicleId) {
+      try {
+        if (auth) {
+          const byIdData = await api(`/autos/${vehicleId}`, auth);
+          return normalizeObject(byIdData);
+        }
+        const byIdData = await fetchPublic(`/autos/${vehicleId}`);
+        return normalizeObject(byIdData);
+      } catch {
+        if (auth) {
+          const allData = await api('/autos', auth);
+          const autos = normalizeList(allData, ['data', 'autos']);
+          return autos.find(auto => String(auto._id || auto.id) === String(vehicleId));
+        }
+        return null;
+      }
+    }
+
+    async function getAnswerForQuestion(auth, questionId) {
+      if (!auth) return null;
+      try {
+        const answerData = await api(`/answers/question/${questionId}`, auth);
+        return normalizeObject(answerData);
+      } catch {
+        return null;
+      }
+    }
+
+    function getAvatarUrl(user, size) {
+      if (!user) return '';
+      const foto = user.foto_perfil;
+      if (foto && String(foto).trim()) {
+        return foto.startsWith('http') ? foto : (API_ORIGIN + (foto.startsWith('/') ? '' : '/') + foto);
+      }
+      return '';
+    }
+
+    function getInitials(nombre, username) {
+      const n = (nombre || username || 'U').trim();
+      const parts = n.split(/\s+/);
+      if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+      return (n[0] || 'U').toUpperCase();
+    }
+
+    function renderAvatar(user, nameOrUsername, cssClass) {
+      const url = getAvatarUrl(user, 40);
+      const name = nameOrUsername || user?.nombre || user?.username || 'Usuario';
+      if (url) {
+        return `<img src="${escapeHtml(url)}" alt="" class="avatar ${cssClass || ''}" loading="lazy">`;
+      }
+      return `<span class="avatar avatar-initials ${cssClass || ''}" aria-hidden="true">${escapeHtml(getInitials(name, user?.username))}</span>`;
+    }
+
+    function setFeedback(message) {
+      feedbackEl.textContent = message || '';
+    }
+
+    function renderQuestions(questions, answersMap, currentUserId) {
+      if (!Array.isArray(questions) || questions.length === 0) {
+        questionsListEl.innerHTML = '<li class="empty-state">Todavía no hay mensajes en esta conversación.</li>';
+        return;
+      }
+
+      questionsListEl.innerHTML = questions.map(question => {
+        const questionId = question._id || question.id;
+        const asker = question.usuario_pregunta_id;
+        const owner = question.usuario_duenio_id;
+        const askedById = String(asker?._id || asker?.id || question.usuario_pregunta_id || '').trim();
+        const askedBy = asker?.nombre || asker?.username || 'Usuario';
+        const isMine = Boolean(currentUserId && askedById && currentUserId === askedById);
+        const answer = answersMap[questionId];
+        const canAnswer = Boolean(currentUserIsVehicleOwner && !answer && askedById && askedById !== currentUserId);
+        const responder = answer?.usuario_responde_id;
+
+        const answerFormHtml = canAnswer
+          ? `<form class="answer-form" data-question-id="${questionId}" data-asker-id="${askedById}">
+              <div class="suggested-chips suggested-answers" id="suggestedAnswers-${questionId}"></div>
+              <div class="form-group"><label class="form-label" for="ans-${questionId}">Tu respuesta</label><textarea id="ans-${questionId}" class="form-textarea" rows="2" maxlength="300" required placeholder="Escribe tu respuesta o elige una sugerencia"></textarea></div>
+              <button type="submit" class="btn btn-secondary btn-sm">Enviar respuesta</button>
+            </form>`
+          : '';
+
+        return `<li class="conversation-item conversation-item-with-avatar">
+          <div class="conversation-row">
+            <div class="conversation-avatar">${renderAvatar(asker, askedBy, 'avatar-asker')}</div>
+            <div class="conversation-body">
+              <div class="conversation-head">
+                <span class="conversation-role">${escapeHtml(askedBy)} ${isMine ? '(tú)' : ''}</span>
+                <span class="conversation-date">${new Date(question.fecha_pregunta || Date.now()).toLocaleString('es-CR')}</span>
+              </div>
+              <p class="conversation-text">${escapeHtml(question.pregunta || question.texto || question.texto_pregunta || '')}</p>
+              ${answer
+                ? `<div class="answer-box answer-with-avatar">
+                    <div class="conversation-row">
+                      <div class="conversation-avatar">${renderAvatar(responder, answer?.usuario_responde_id?.nombre, 'avatar-owner')}</div>
+                      <div class="conversation-body">
+                        <p class="answer-title">Respuesta del propietario</p>
+                        <p class="conversation-text">${escapeHtml(answer.texto_respuesta || answer.respuesta || '')}</p>
+                        <p class="conversation-date">${new Date(answer.fecha_respuesta || Date.now()).toLocaleString('es-CR')}</p>
+                      </div>
+                    </div>
+                  </div>`
+                : `<p class="pending-answer">Sin respuesta aún.</p>${answerFormHtml}`}
+            </div>
+          </div>
+        </li>`;
+      }).join('');
+
+      questionsListEl.querySelectorAll('.suggested-answers').forEach((el) => {
+        const id = el.id;
+        const questionId = id && id.replace('suggestedAnswers-', '');
+        const textarea = questionId && document.getElementById('ans-' + questionId);
+        if (!textarea) return;
+        el.innerHTML = SUGERENCIAS_RESPUESTAS.map((text) => `<button type="button" class="chip" data-answer-for="${questionId}">${escapeHtml(text)}</button>`).join('');
+        el.querySelectorAll('.chip').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            textarea.value = btn.textContent.trim();
+            textarea.focus();
+          });
+        });
+      });
+    }
+
+    async function loadQuestions(auth, vehicleId) {
+      const privateNotice = document.getElementById('questionsPrivateNotice');
+      if (!auth) {
+        questionsListEl.innerHTML = '';
+        if (privateNotice) privateNotice.style.display = 'block';
+        return;
+      }
+      if (privateNotice) privateNotice.style.display = 'none';
+      try {
+        const questionsData = await api(`/questions/vehicle/${vehicleId}`, auth);
+        const questions = normalizeList(questionsData, ['data', 'questions']);
+        const answersMap = {};
+        await Promise.all(questions.map(async (question) => {
+          const questionId = question._id || question.id;
+          if (!questionId) return;
+          const answer = await getAnswerForQuestion(auth, questionId);
+          if (answer) answersMap[questionId] = answer;
+        }));
+        const currentUserId = getUserId(auth.user);
+        renderQuestions(questions, answersMap, currentUserId);
+      } catch (err) {
+        questionsListEl.innerHTML = '<li class="empty-state">' + escapeHtml(err.message || 'No se pudieron cargar los mensajes.') + '</li>';
+      }
+    }
+
+    function fillSuggestedQuestionsChips() {
+      const container = document.getElementById('suggestedQuestionsChips');
+      const textarea = document.getElementById('preguntaTexto');
+      if (!container || !textarea) return;
+      container.innerHTML = SUGERENCIAS_PREGUNTAS.map((text) => `<button type="button" class="chip">${escapeHtml(text)}</button>`).join('');
+      container.querySelectorAll('.chip').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          textarea.value = btn.textContent.trim();
+          textarea.focus();
+        });
+      });
+    }
+
+    async function loadVehiclePage(auth) {
+      const vehicleId = getVehiculoIdFromQuery();
+      const questionsHint = document.getElementById('questionsHint');
+
+      if (!vehicleId) {
+        vehicleMetaEl.textContent = 'No se recibió el identificador del vehículo.';
+        questionsListEl.innerHTML = '<li class="empty-state">Abre esta pantalla desde el Listado o el enlace compartido.</li>';
+        questionFormEl.style.display = 'none';
+        return;
+      }
+
+      try {
+        const vehicle = await getVehicleById(auth, vehicleId);
+        if (!vehicle) {
+          throw new Error('No se encontró el vehículo solicitado.');
+        }
+
+        const owner = vehicle.owner_id?.nombre || vehicle.owner_id?.username || 'Sin propietario';
+        vehicleMetaEl.textContent = `${vehicle.marca || ''} ${vehicle.modelo || ''} · ${vehicle.anio || ''} · ₡${formatNumber(vehicle.precio)} · ${vehicle.estado || 'disponible'} · Propietario: ${owner}`;
+
+        const detailEl = document.getElementById('vehiculoDetail');
+        const API_ORIGIN = window.APP_CONFIG.API_ORIGIN;
+        const fotos = vehicle.fotos && Array.isArray(vehicle.fotos) ? vehicle.fotos : [];
+        const combustibles = { gasolina: 'Gasolina', diesel: 'Diesel', hibrido: 'Híbrido', electrico: 'Eléctrico' };
+        const transmisiones = { automatico: 'Automático', manual: 'Manual' };
+        let detailHtml = '';
+        if (fotos.length > 0) {
+          detailHtml += '<div class="vehiculo-gallery">';
+          fotos.forEach((path, i) => {
+            detailHtml += `<img src="${API_ORIGIN}${path}" alt="Foto ${i + 1}" class="vehiculo-gallery-img">`;
+          });
+          detailHtml += '</div>';
+        }
+        detailHtml += '<dl class="vehiculo-specs">';
+        if (vehicle.kilometraje != null) detailHtml += `<dt>Kilometraje</dt><dd>${vehicle.kilometraje.toLocaleString('es-CR')} km</dd>`;
+        if (vehicle.tipoCombustible) detailHtml += `<dt>Combustible</dt><dd>${escapeHtml(combustibles[vehicle.tipoCombustible] || vehicle.tipoCombustible)}</dd>`;
+        if (vehicle.tipoTransmision) detailHtml += `<dt>Transmisión</dt><dd>${escapeHtml(transmisiones[vehicle.tipoTransmision] || vehicle.tipoTransmision)}</dd>`;
+        if (vehicle.provincia) detailHtml += `<dt>Provincia</dt><dd>${escapeHtml(vehicle.provincia)}</dd>`;
+        detailHtml += '</dl>';
+        if (detailEl) detailEl.innerHTML = detailHtml;
+
+        const ownerId = String(vehicle.owner_id?._id || vehicle.owner_id?.id || vehicle.owner_id || '').trim();
+        currentVehicleOwnerId = ownerId;
+        const currentUserId = auth ? getUserId(auth.user) : null;
+        currentUserIsVehicleOwner = Boolean(ownerId && currentUserId && ownerId === currentUserId);
+
+        const editLink = document.getElementById('editVehicleLink');
+        if (editLink) {
+          if (currentUserIsVehicleOwner) {
+            editLink.href = 'editar-vehiculo.html?id=' + encodeURIComponent(vehicleId);
+            editLink.style.display = '';
+          } else {
+            editLink.style.display = 'none';
+          }
+        }
+
+        if (!auth) {
+          questionFormEl.style.display = 'none';
+          if (questionsHint) questionsHint.textContent = 'Inicia sesión para ver y enviar mensajes. Las conversaciones son privadas entre tú y el propietario.';
+        } else if (currentUserIsVehicleOwner) {
+          questionFormEl.style.display = 'none';
+          setFeedback('Como propietario, aquí puedes responder las preguntas. Solo tú y quien preguntó ven esta conversación.');
+          if (questionsHint) questionsHint.textContent = 'Preguntas recibidas. Responde desde aquí; la conversación es privada.';
+        } else {
+          questionFormEl.style.display = '';
+          fillSuggestedQuestionsChips();
+          if (questionsHint) questionsHint.textContent = 'Haz una pregunta al propietario. Solo él y tú verán este mensaje.';
+        }
+
+        await loadQuestions(auth, vehicleId);
+      } catch (err) {
+        vehicleMetaEl.textContent = err.message || 'Error al cargar el vehículo.';
+        questionsListEl.innerHTML = '<li class="empty-state">No se pudo cargar la conversación del vehículo.</li>';
+      }
+    }
+
+    async function submitQuestion(event, auth) {
+      event.preventDefault();
+      const vehicleId = getVehiculoIdFromQuery();
+      if (!vehicleId) {
+        redirectToLogin();
+        return;
+      }
+
+      const questionText = questionInputEl.value.trim();
+      if (!questionText) {
+        setFeedback('Debes escribir una pregunta antes de enviarla.');
+        return;
+      }
+
+      if (questionText.length < MIN_QUESTION_LENGTH) {
+        setFeedback(`La pregunta debe tener al menos ${MIN_QUESTION_LENGTH} caracteres.`);
+        return;
+      }
+
+      setFeedback('');
+
+      try {
+        // El backend deriva usuario_duenio_id desde vehiculo_id en el controlador.
+        const payload = { vehiculo_id: vehicleId, pregunta: questionText };
+        console.log('[POST /questions] payload:', payload);
+        await api('/questions', auth, { method: 'POST', body: JSON.stringify(payload) });
+
+        questionInputEl.value = '';
+        setFeedback('Pregunta enviada correctamente.');
+        await loadQuestions(auth, vehicleId);
+      } catch (err) {
+        setFeedback(err.message || 'Error al enviar pregunta.');
+      }
+    }
+
+    async function submitAnswer(event, auth) {
+      const form = event.target;
+      if (!form.classList.contains('answer-form')) return;
+      event.preventDefault();
+
+      const questionId = form.dataset.questionId;
+      const askerId = form.dataset.askerId;
+      const vehicleId = getVehiculoIdFromQuery();
+      const textarea = form.querySelector('textarea');
+      const answerText = (textarea?.value || '').trim();
+
+      if (!questionId || !vehicleId) {
+        setFeedback('No se encontró la información de la pregunta a responder.');
+        return;
+      }
+
+      if (answerText.length < 3) {
+        setFeedback('La respuesta debe tener al menos 3 caracteres.');
+        return;
+      }
+
+      try {
+        await api('/answers', auth, {
+          method: 'POST',
+          body: JSON.stringify({
+            pregunta_id: questionId,
+            vehiculo_id: vehicleId,
+            usuario_pregunta_id: askerId,
+            texto_respuesta: answerText
+          })
+        });
+
+        setFeedback('Respuesta enviada correctamente.');
+        await loadQuestions(auth, vehicleId);
+      } catch (err) {
+        setFeedback(err.message || 'Error al responder pregunta.');
+      }
+    }
+  </script>
+</body>
+</html>

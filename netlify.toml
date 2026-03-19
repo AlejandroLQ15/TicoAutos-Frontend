@@ -1,0 +1,10 @@
+# Despliegue estático en Netlify (sin build).
+# Publicar la raíz del frontend donde está index.html.
+[build]
+  publish = "."
+  command = ""
+
+[[redirects]]
+  from = "/vehicles/:id"
+  to = "/pages/vehiculo.html?id=:id"
+  status = 200

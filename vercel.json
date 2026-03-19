@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/vehicles/:id",
+      "destination": "/pages/vehiculo.html?id=:id"
+    }
+  ]
+}

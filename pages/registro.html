@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Registro - TicoAutos</title>
+  
+  <link rel="stylesheet" href="../css/login.css">
+  <script src="../js/config.js"></script>
+</head>
+<body class="auth-page">
+  <div class="auth-page-inner">
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <img src="../assets/TicoAutos_Logo.png" alt="TicoAutos" class="auth-logo-img">
+        <h1 class="auth-title">Crear cuenta</h1>
+        <p class="auth-subtitle">Regístrate para acceder al sistema</p>
+      </div>
+
+      <form id="registroForm" class="auth-form">
+        <div class="form-group">
+          <label class="form-label" for="nombre">Nombre completo</label>
+          <input type="text" id="nombre" name="nombre" class="form-input" placeholder="Tu nombre" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="usuario">Usuario</label>
+          <input type="text" id="usuario" name="usuario" class="form-input" placeholder="Nombre de usuario" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="contrasena">Contraseña</label>
+          <input type="password" id="contrasena" name="contrasena" class="form-input" placeholder="Contraseña segura" required>
+        </div>
+        <button type="submit" class="btn-submit">Crear cuenta</button>
+      </form>
+
+      <div class="auth-footer">
+        <p>¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
+        <p><a href="listado.html">Ver listado de vehículos</a> (sin iniciar sesión)</p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="app-footer app-footer-auth">
+    <div class="app-footer-inner">
+      <p class="app-footer-copy">© 2025 TicoAutos · Programación en Ambiente Web</p>
+      <div class="app-footer-links">
+        <a href="../index.html">Inicio</a>
+        <a href="listado.html">Vehículos</a>
+        <a href="inbox.html">Mensajes</a>
+      </div>
+    </div>
+  </footer>
+  </div>
+
+  <script>
+    const REGISTER_URL = window.APP_CONFIG.API_BASE + '/users/register';
+
+    document.getElementById('registroForm').addEventListener('submit', async function(event) {
+      event.preventDefault();
+      const nombre = document.getElementById('nombre').value.trim();
+      const usuario = document.getElementById('usuario').value.trim();
+      const contrasena = document.getElementById('contrasena').value;
+
+      if (!nombre || !usuario || !contrasena) {
+        alert('Por favor completa todos los campos.');
+        return;
+      }
+
+      try {
+        const resp = await fetch(REGISTER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre, username: usuario, password: contrasena }),
+        });
+        if (!resp.ok) {
+          const errData = await resp.json().catch(() => null);
+          throw new Error(errData?.message || 'Error en registro');
+        }
+        alert('Registro exitoso, por favor inicia sesión.');
+        window.location.href = 'login.html';
+      } catch (err) {
+        console.error('Error en registro', err);
+        if (err.message === 'Load failed' || err.name === 'TypeError') {
+          alert('No se pudo conectar al servidor. Comprueba que el backend esté en marcha (npm start en TicoAutos-Backend-main) y que MongoDB esté activo.');
+        } else {
+          alert('Hubo un error al registrar: ' + err.message);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

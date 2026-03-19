@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Editar vehículo - TicoAutos</title>
+  <link rel="stylesheet" href="../css/styles.css">
+  <script src="../js/config.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="app-header-inner">
+        <a href="../index.html" class="app-brand">
+          <img src="../assets/TicoAutos_Logo.png" alt="TicoAutos" class="app-brand-logo">
+        </a>
+        <nav class="app-nav" id="appNav"></nav>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <h1 class="page-title">Editar vehículo</h1>
+
+      <section class="card" id="editCard">
+        <h2 class="card-title">Modificar datos</h2>
+        <p class="section-hint" id="loadHint">Cargando vehículo...</p>
+        <form id="autoForm" style="display: none;">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="marca">Marca</label>
+              <input type="text" id="marca" name="marca" class="form-input" placeholder="Ej. Toyota" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="modelo">Modelo</label>
+              <input type="text" id="modelo" name="modelo" class="form-input" placeholder="Ej. Corolla" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="anio">Año</label>
+              <input type="number" id="anio" name="anio" class="form-input" placeholder="Ej. 2023" min="1900" max="2100" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="precio">Precio (₡)</label>
+              <input type="number" id="precio" name="precio" class="form-input" placeholder="Ej. 15000000" min="0" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="kilometraje">Kilometraje</label>
+              <input type="number" id="kilometraje" name="kilometraje" class="form-input" placeholder="Ej. 45000" min="0" step="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="tipoCombustible">Tipo de combustible</label>
+              <select id="tipoCombustible" name="tipoCombustible" class="form-select">
+                <option value="">Seleccione</option>
+                <option value="gasolina">Gasolina</option>
+                <option value="diesel">Diesel</option>
+                <option value="hibrido">Híbrido</option>
+                <option value="electrico">Eléctrico</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="tipoTransmision">Tipo de transmisión</label>
+              <select id="tipoTransmision" name="tipoTransmision" class="form-select">
+                <option value="">Seleccione</option>
+                <option value="automatico">Automático</option>
+                <option value="manual">Manual</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="provincia">Provincia (Costa Rica)</label>
+              <select id="provincia" name="provincia" class="form-select">
+                <option value="">Seleccione</option>
+                <option value="Alajuela">Alajuela</option>
+                <option value="Cartago">Cartago</option>
+                <option value="Guanacaste">Guanacaste</option>
+                <option value="Heredia">Heredia</option>
+                <option value="Limón">Limón</option>
+                <option value="Puntarenas">Puntarenas</option>
+                <option value="San José">San José</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="estado">Estado</label>
+              <select id="estado" name="estado" class="form-select">
+                <option value="disponible">Disponible</option>
+                <option value="reservado">Reservado</option>
+                <option value="vendido">Vendido</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fotos actuales</label>
+            <div id="fotosActuales" class="edit-fotos-actuales"></div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="fotos">Reemplazar fotos (opcional)</label>
+            <input type="file" id="fotos" name="fotos" class="form-input" accept="image/jpeg,image/png,image/gif,image/webp" multiple>
+            <span class="form-hint">Si eliges nuevas imágenes, reemplazarán las actuales. Puedes elegir varias (máximo 10). Hasta 5 MB cada una.</span>
+          </div>
+          <p id="formFeedback" class="form-feedback" role="alert" aria-live="polite"></p>
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
+          <a href="vehiculos.html" class="btn btn-light" style="margin-left: 0.5rem;">Cancelar</a>
+        </form>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <div class="app-footer-inner">
+        <p class="app-footer-copy">© 2025 TicoAutos · Programación en Ambiente Web</p>
+        <div class="app-footer-links">
+          <a href="../index.html">Inicio</a>
+          <a href="listado.html">Vehículos</a>
+          <a href="inbox.html">Mensajes</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const API_BASE = window.APP_CONFIG.API_BASE;
+    const API_ORIGIN = window.APP_CONFIG.API_ORIGIN;
+    const AUTH_TOKEN_KEY = 'authToken';
+    const AUTH_USER_KEY = 'authUser';
+    const ESTADOS = ['disponible', 'reservado', 'vendido'];
+    const MAX_FOTOS = 10;
+
+    let vehicleId = '';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const auth = getAuthContext();
+      if (!auth) {
+        window.location.replace('login.html');
+        return;
+      }
+
+      const nav = document.getElementById('appNav');
+      const logoutIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+      nav.innerHTML = '<a href="../index.html">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger nav-active">Vehículos</span><div class="nav-dropdown-menu"><a href="vehiculos.html">Mis vehículos</a><a href="crear-vehiculo.html">Crear vehículo</a><a href="listado.html">Ver listado</a></div></div><a href="inbox.html">Mensajes</a><a href="perfil.html">Mi perfil</a><a href="#" id="logoutLink" class="nav-logout" title="Cerrar sesión" aria-label="Cerrar sesión">' + logoutIcon + '</a>';
+      document.getElementById('logoutLink').addEventListener('click', e => {
+        e.preventDefault();
+        clearAuth();
+        window.location.href = 'login.html';
+      });
+
+      const params = new URLSearchParams(window.location.search);
+      vehicleId = params.get('id') || '';
+      if (!vehicleId) {
+        showError('No se indicó el vehículo a editar.');
+        return;
+      }
+      loadVehicle(auth);
+    });
+
+    function clearAuth() {
+      localStorage.removeItem(AUTH_USER_KEY);
+      localStorage.removeItem(AUTH_TOKEN_KEY);
+    }
+
+    function getAuthContext() {
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      const rawUser = localStorage.getItem(AUTH_USER_KEY);
+      if (!token || !rawUser) return null;
+      try {
+        const user = JSON.parse(rawUser);
+        if (!user || Object.keys(user).length === 0) return null;
+        return { token, user };
+      } catch {
+        clearAuth();
+        return null;
+      }
+    }
+
+    function setFormFeedback(msg) {
+      document.getElementById('formFeedback').textContent = msg || '';
+    }
+
+    function showError(msg) {
+      document.getElementById('loadHint').textContent = msg;
+      document.getElementById('loadHint').innerHTML += ' <a href="vehiculos.html">Volver a Mis vehículos</a>';
+      document.getElementById('autoForm').style.display = 'none';
+    }
+
+    function escapeHtml(s) {
+      if (!s) return '';
+      const div = document.createElement('div');
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    async function loadVehicle(auth) {
+      const loadHint = document.getElementById('loadHint');
+      const form = document.getElementById('autoForm');
+      try {
+        const resp = await fetch(`${API_BASE}/autos/${vehicleId}`, {
+          headers: { 'Authorization': `Bearer ${auth.token}` }
+        });
+        const result = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          showError(result.message || 'No se pudo cargar el vehículo.');
+          return;
+        }
+        const vehicle = result.data || result;
+        const ownerId = String(vehicle.owner_id?._id || vehicle.owner_id?.id || vehicle.owner_id || '').trim();
+        const userId = String(auth.user?.id || auth.user?._id || '').trim();
+        if (ownerId !== userId) {
+          showError('No tienes permiso para editar este vehículo.');
+          return;
+        }
+
+        document.getElementById('marca').value = vehicle.marca || '';
+        document.getElementById('modelo').value = vehicle.modelo || '';
+        document.getElementById('anio').value = vehicle.anio ?? '';
+        document.getElementById('precio').value = vehicle.precio ?? '';
+        document.getElementById('kilometraje').value = vehicle.kilometraje != null ? vehicle.kilometraje : '';
+        document.getElementById('tipoCombustible').value = vehicle.tipoCombustible || '';
+        document.getElementById('tipoTransmision').value = vehicle.tipoTransmision || '';
+        document.getElementById('provincia').value = vehicle.provincia || '';
+        document.getElementById('estado').value = vehicle.estado || 'disponible';
+
+        const fotosActualesEl = document.getElementById('fotosActuales');
+        const fotos = vehicle.fotos && Array.isArray(vehicle.fotos) ? vehicle.fotos : [];
+        if (fotos.length > 0) {
+          fotosActualesEl.innerHTML = fotos.map((path, i) =>
+            `<img src="${API_ORIGIN}${path}" alt="Foto ${i + 1}" class="edit-foto-thumb">`
+          ).join('');
+        } else {
+          fotosActualesEl.innerHTML = '<span class="form-hint">Sin fotos cargadas.</span>';
+        }
+
+        loadHint.style.display = 'none';
+        form.style.display = 'block';
+      } catch (err) {
+        console.error(err);
+        showError('Error al cargar el vehículo.');
+      }
+    }
+
+    function validateForm() {
+      const marca = document.getElementById('marca').value.trim();
+      const modelo = document.getElementById('modelo').value.trim();
+      const anio = parseInt(document.getElementById('anio').value, 10);
+      const precio = parseFloat(document.getElementById('precio').value);
+      const estado = document.getElementById('estado').value;
+      const fotosInput = document.getElementById('fotos');
+      if (!marca || !modelo) return 'Marca y modelo son obligatorios.';
+      const currentYear = new Date().getFullYear() + 1;
+      if (!Number.isInteger(anio) || anio < 1900 || anio > currentYear) return `El año debe estar entre 1900 y ${currentYear}.`;
+      if (!Number.isFinite(precio) || precio <= 0) return 'El precio debe ser mayor que 0.';
+      if (estado && !ESTADOS.includes(estado)) return 'Estado inválido.';
+      if (fotosInput.files.length > MAX_FOTOS) return `Máximo ${MAX_FOTOS} fotos.`;
+      return '';
+    }
+
+    document.getElementById('autoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const auth = getAuthContext();
+      if (!auth) {
+        window.location.href = 'login.html';
+        return;
+      }
+      const err = validateForm();
+      if (err) {
+        setFormFeedback(err);
+        return;
+      }
+      setFormFeedback('');
+
+      const formData = new FormData();
+      formData.append('marca', document.getElementById('marca').value.trim());
+      formData.append('modelo', document.getElementById('modelo').value.trim());
+      formData.append('anio', document.getElementById('anio').value);
+      formData.append('precio', document.getElementById('precio').value);
+      formData.append('estado', document.getElementById('estado').value || 'disponible');
+      const km = document.getElementById('kilometraje').value.trim();
+      formData.append('kilometraje', km || '');
+      formData.append('tipoCombustible', document.getElementById('tipoCombustible').value || '');
+      formData.append('tipoTransmision', document.getElementById('tipoTransmision').value || '');
+      formData.append('provincia', document.getElementById('provincia').value || '');
+      const fotosInput = document.getElementById('fotos');
+      for (let i = 0; i < Math.min(fotosInput.files.length, MAX_FOTOS); i++) {
+        formData.append('fotos', fotosInput.files[i]);
+      }
+
+      try {
+        const resp = await fetch(`${API_BASE}/autos/${vehicleId}`, {
+          method: 'PUT',
+          headers: { 'Authorization': `Bearer ${auth.token}` },
+          body: formData
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) throw new Error(data.message || 'Error al guardar');
+        setFormFeedback('Cambios guardados correctamente.');
+        setTimeout(() => { window.location.href = 'vehiculos.html'; }, 1500);
+      } catch (err) {
+        setFormFeedback(err.message || 'Error al guardar cambios');
+      }
+    });
+  </script>
+</body>
+</html>
