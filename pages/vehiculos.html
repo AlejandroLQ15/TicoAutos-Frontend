@@ -43,7 +43,9 @@
   </div>
 
   <script>
+    // Config del backend y estados
     const API_BASE = window.APP_CONFIG.API_BASE;
+    // Claves de sesion (token + usuario)
     const AUTH_TOKEN_KEY = 'authToken';
     const AUTH_USER_KEY = 'authUser';
     const ESTADO_DISPONIBLE = 'disponible';
@@ -51,12 +53,14 @@
     const ESTADO_VENDIDO = 'vendido';
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Solo mostramos “Mis vehículos” si el usuario está logueado
       const auth = getAuthContext();
       if (!auth) {
         window.location.replace('login.html');
         return;
       }
 
+      // Armamos el menú con link de “Cerrar sesión”
       const nav = document.getElementById('appNav');
       const logoutIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
       nav.innerHTML = '<a href="../index.html">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger nav-active">Vehículos</span><div class="nav-dropdown-menu"><a href="vehiculos.html">Mis vehículos</a><a href="crear-vehiculo.html">Crear vehículo</a><a href="listado.html">Ver listado</a></div></div><a href="inbox.html">Mensajes</a><a href="perfil.html">Mi perfil</a><a href="#" id="logoutLink" class="nav-logout" title="Cerrar sesión" aria-label="Cerrar sesión">' + logoutIcon + '</a>';
@@ -69,11 +73,13 @@
       cargarAutos();
     });
 
+    // Limpia token/usuario guardados
     function clearAuth() {
       localStorage.removeItem(AUTH_USER_KEY);
       localStorage.removeItem(AUTH_TOKEN_KEY);
     }
 
+    // Obtiene la sesion desde localStorage
     function getAuthContext() {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const rawUser = localStorage.getItem(AUTH_USER_KEY);
@@ -88,11 +94,13 @@
       }
     }
 
+    // Toma el id del usuario para comparar con el owner_id del auto
     function getUserId(user) {
       if (!user) return '';
       return String(user._id || user.id || user.userId || '').trim();
     }
 
+    // Intenta determinar si el auto pertenece al usuario
     function isOwner(auto, user) {
       const userId = getUserId(user);
       const owner = auto?.owner_id;
@@ -107,6 +115,7 @@
       return Boolean(currentUsername && ownerUsername && currentUsername === ownerUsername);
     }
 
+    // GET de autos con token del usuario
     async function getMyAutos(auth) {
       const headers = { 'Authorization': `Bearer ${auth.token}` };
 
@@ -128,6 +137,7 @@
       return autos.filter(auto => isOwner(auto, auth.user));
     }
 
+    // Renderiza la lista de autos del usuario (y habilita acciones editar/vender/eliminar)
     async function cargarAutos() {
       const list = document.getElementById('autosList');
       const auth = getAuthContext();
@@ -173,6 +183,7 @@
       }
     }
 
+    // Escapa HTML para evitar inyeccion si el backend manda texto inesperado
     function escapeHtml(s) {
       if (!s) return '';
       const div = document.createElement('div');
@@ -180,11 +191,13 @@
       return div.innerHTML;
     }
 
+    // Formatea numeros como se acostumbra en Costa Rica (separadores)
     function formatNumber(n) {
       if (n == null) return '0';
       return Number(n).toLocaleString('es-CR');
     }
 
+    // Cambia el estado del auto a “vendido” (se hace con PATCH)
     async function marcarComoVendido(autoId) {
       const auth = getAuthContext();
       if (!auth) {
@@ -214,6 +227,7 @@
       }
     }
 
+    // Elimina el auto: primero pide confirmacion
     async function eliminarAuto(autoId) {
       const auth = getAuthContext();
       if (!auth) {
@@ -241,6 +255,7 @@
       }
     }
 
+    // Exponemos funciones globales porque el HTML usa onclick="..."
     window.marcarComoVendido = marcarComoVendido;
     window.eliminarAuto = eliminarAuto;
   </script>

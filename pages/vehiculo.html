@@ -67,8 +67,11 @@
   </div>
 
   <script>
+    // Config base del frontend para hablar con el backend
     const API_BASE = window.APP_CONFIG.API_BASE;
+    // Origen del backend para construir URLs completas de imagenes
     const API_ORIGIN = window.APP_CONFIG.API_ORIGIN;
+    // Claves usadas para leer el login desde localStorage
     const AUTH_TOKEN_KEY = 'authToken';
     const AUTH_USER_KEY = 'authUser';
     const MIN_QUESTION_LENGTH = 8;
@@ -103,10 +106,12 @@
 
     // Se guarda el ID del dueño al cargar el vehículo para incluirlo en cada pregunta.
     let currentVehicleOwnerId = '';
+    // Se usa para saber si el usuario puede responder (o solo preguntar)
     let currentUserIsVehicleOwner = false;
 
     document.addEventListener('DOMContentLoaded', init);
 
+    // Arranque de la pantalla: valida sesion, carga vehiculo y arma listeners
     function init() {
       const auth = getAuth();
       setupNav(auth);
@@ -120,6 +125,7 @@
       }
     }
 
+    // Copia el enlace actual para compartir esta vista
     function copyShareLink() {
       const url = window.location.href;
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -134,6 +140,7 @@
       }
     }
 
+    // Copia al portapapeles usando un fallback (por compatibilidad)
     function fallbackCopy(url) {
       const ta = document.createElement('textarea');
       ta.value = url;
@@ -151,6 +158,9 @@
       document.body.removeChild(ta);
     }
 
+    // Menu superior:
+    // - logueado: incluye mis vehiculos + crear + mensajes + perfil + cerrar sesión
+    // - no logueado: muestra solo listado/registro/login
     function setupNav(auth) {
       const nav = document.getElementById('appNav');
       const logoutIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
@@ -166,15 +176,18 @@
       }
     }
 
+    // Lleva a login si hace falta sesión
     function redirectToLogin() {
       window.location.replace('/pages/login.html');
     }
 
+    // Borra datos de sesion local
     function clearAuth() {
       localStorage.removeItem(AUTH_USER_KEY);
       localStorage.removeItem(AUTH_TOKEN_KEY);
     }
 
+    // Reconstruye el contexto { token, user } desde localStorage
     function getAuth() {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const rawUser = localStorage.getItem(AUTH_USER_KEY);
@@ -251,6 +264,9 @@
       return data;
     }
 
+    // Intenta sacar el ID del vehiculo desde:
+    // - ?id=... (caso editar)
+    // - rutas /vehicles/:id (caso enlace desde el listado)
     function getVehiculoIdFromQuery() {
       const params = new URLSearchParams(window.location.search);
       const queryId = params.get('id');
@@ -266,6 +282,9 @@
       return '';
     }
 
+    // Obtiene el vehiculo:
+    // - si hay auth, usa endpoint protegido
+    // - si no, usa endpoints publicos (o filtra desde /autos)
     async function getVehicleById(auth, vehicleId) {
       try {
         if (auth) {
@@ -323,6 +342,8 @@
       feedbackEl.textContent = message || '';
     }
 
+    // Renderiza la lista de preguntas.
+    // - Si el propietario puede responder y la pregunta no tiene respuesta: muestra formulario.
     function renderQuestions(questions, answersMap, currentUserId) {
       if (!Array.isArray(questions) || questions.length === 0) {
         questionsListEl.innerHTML = '<li class="empty-state">Todavía no hay mensajes en esta conversación.</li>';
@@ -389,6 +410,7 @@
       });
     }
 
+    // Carga preguntas del vehiculo y, para cada una, intenta traer su respuesta.
     async function loadQuestions(auth, vehicleId) {
       const privateNotice = document.getElementById('questionsPrivateNotice');
       if (!auth) {
@@ -427,6 +449,10 @@
       });
     }
 
+    // Carga el detalle del vehiculo (fotos + especificaciones) y decide:
+    // - si puedes preguntar (no eres propietario)
+    // - si puedes responder (eres propietario)
+    // - o si debes iniciar sesion
     async function loadVehiclePage(auth) {
       const vehicleId = getVehiculoIdFromQuery();
       const questionsHint = document.getElementById('questionsHint');
@@ -503,6 +529,7 @@
       }
     }
 
+    // Envia una nueva pregunta al propietario del vehiculo
     async function submitQuestion(event, auth) {
       event.preventDefault();
       const vehicleId = getVehiculoIdFromQuery();
@@ -538,6 +565,7 @@
       }
     }
 
+    // Envia una respuesta para una pregunta existente (solo aplica en el formulario de respuesta del propietario)
     async function submitAnswer(event, auth) {
       const form = event.target;
       if (!form.classList.contains('answer-form')) return;

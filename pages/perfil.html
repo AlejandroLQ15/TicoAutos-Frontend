@@ -58,23 +58,30 @@
   </div>
 
   <script>
+    // Configuracion base del backend
     const API_BASE = window.APP_CONFIG.API_BASE;
+    // Origen del backend para armar URLs completas de imagenes
     const API_ORIGIN = window.APP_CONFIG.API_ORIGIN;
+    // Claves para la sesion en localStorage
     const AUTH_TOKEN_KEY = 'authToken';
     const AUTH_USER_KEY = 'authUser';
 
     document.addEventListener('DOMContentLoaded', () => {
+      // 1) Verificamos que el usuario este logueado
       const auth = getAuth();
       if (!auth) {
         window.location.replace('login.html');
         return;
       }
+      // 2) Armamos el menu y cargamos los datos del perfil
       setupNav(auth);
       loadProfile(auth);
+      // 3) Escuchamos cambios/submit del formulario de perfil
       document.getElementById('profileForm').addEventListener('submit', (e) => submitProfile(e, auth));
       document.getElementById('foto_perfil').addEventListener('change', (e) => previewAvatar(e));
     });
 
+    // Lee token + usuario de localStorage y los valida
     function getAuth() {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const raw = localStorage.getItem(AUTH_USER_KEY);
@@ -101,10 +108,12 @@
       document.getElementById('formFeedback').textContent = msg || '';
     }
 
+    // Construye la URL de foto: si viene relativa, la juntamos con API_ORIGIN
     function getAvatarUrl(foto) {
       if (!foto || !String(foto).trim()) return '';
       return foto.startsWith('http') ? foto : (API_ORIGIN + (foto.startsWith('/') ? '' : '/') + foto);
     }
+    // Iniciales para cuando no hay foto (ej. "JD")
     function getInitials(nombre, username) {
       const n = (nombre || username || 'U').trim();
       const parts = n.split(/\s+/);
@@ -112,6 +121,7 @@
       return (n[0] || 'U').toUpperCase();
     }
 
+    // Actualiza el “preview” de la foto de perfil antes de guardar
     function renderAvatarPreview(url, initials) {
       const el = document.getElementById('profileAvatarPreview');
       if (!el) return;
@@ -127,6 +137,7 @@
       }
     }
 
+    // Cuando eliges un archivo, lo previsualizamos localmente (sin subir aun)
     function previewAvatar(e) {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
@@ -134,6 +145,7 @@
       renderAvatarPreview(url, '');
     }
 
+    // Carga los datos del usuario desde el backend y precarga el formulario
     async function loadProfile(auth) {
       try {
         const res = await fetch(`${API_BASE}/users/me`, {
@@ -150,6 +162,7 @@
       }
     }
 
+    // Envía cambios de perfil (nombre + opcional foto) al backend
     async function submitProfile(e, auth) {
       e.preventDefault();
       setFeedback('');
@@ -160,6 +173,7 @@
       if (fileInput.files && fileInput.files[0]) formData.append('foto_perfil', fileInput.files[0]);
 
       try {
+        // PATCH para actualizar /users/me con datos multipart/form-data
         const res = await fetch(`${API_BASE}/users/me`, {
           method: 'PATCH',
           headers: { 'Authorization': `Bearer ${auth.token}` },
@@ -168,6 +182,7 @@
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.message || 'Error al guardar');
         const updated = data.data || data;
+        // Guardamos lo actualizado en localStorage para que se vea inmediato
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify({ id: updated.id, username: updated.username, nombre: updated.nombre, foto_perfil: updated.foto_perfil }));
         renderAvatarPreview(getAvatarUrl(updated.foto_perfil), getInitials(updated.nombre, updated.username));
         setFeedback('Perfil actualizado correctamente.');
