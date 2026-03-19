@@ -121,45 +121,61 @@
   </div>
 
   <script>
+    // Base del backend (viene de ../js/config.js)
     const API_BASE = window.APP_CONFIG.API_BASE;
+    // Origen del backend para armar URLs completas de imágenes
     const API_ORIGIN = window.APP_CONFIG.API_ORIGIN;
+    // Claves en localStorage para la sesion
     const AUTH_TOKEN_KEY = 'authToken';
     const AUTH_USER_KEY = 'authUser';
+    // Estados validos del vehiculo (se usa en la validacion)
     const ESTADOS = ['disponible', 'reservado', 'vendido'];
+    // Limite de fotos que se permite enviar
     const MAX_FOTOS = 10;
 
+    // ID del vehiculo que se quiere editar (viene de ?id=... en la URL)
     let vehicleId = '';
 
+    // Cuando el HTML termina de cargarse, revisamos sesion y leemos el ?id=
     document.addEventListener('DOMContentLoaded', () => {
       const auth = getAuthContext();
       if (!auth) {
+        // Si no hay token guardado, no se puede editar => mandamos a login
         window.location.replace('login.html');
         return;
       }
 
       const nav = document.getElementById('appNav');
+      // Icono SVG para el link de cerrar sesion
       const logoutIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
       nav.innerHTML = '<a href="../index.html">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger nav-active">Vehículos</span><div class="nav-dropdown-menu"><a href="vehiculos.html">Mis vehículos</a><a href="crear-vehiculo.html">Crear vehículo</a><a href="listado.html">Ver listado</a></div></div><a href="inbox.html">Mensajes</a><a href="perfil.html">Mi perfil</a><a href="#" id="logoutLink" class="nav-logout" title="Cerrar sesión" aria-label="Cerrar sesión">' + logoutIcon + '</a>';
       document.getElementById('logoutLink').addEventListener('click', e => {
         e.preventDefault();
+        // Borrar sesion y volver a login
         clearAuth();
         window.location.href = 'login.html';
       });
 
+      // Leemos el id del vehiculo desde la URL
       const params = new URLSearchParams(window.location.search);
       vehicleId = params.get('id') || '';
       if (!vehicleId) {
+        // Si no vinieron parametros, no sabemos que vehiculo editar
         showError('No se indicó el vehículo a editar.');
         return;
       }
+      // Cargamos los datos actuales del vehiculo antes de mostrar el formulario
       loadVehicle(auth);
     });
 
+    // Borra token y usuario guardados en el navegador
     function clearAuth() {
       localStorage.removeItem(AUTH_USER_KEY);
       localStorage.removeItem(AUTH_TOKEN_KEY);
     }
 
+    // Intenta reconstruir la sesion desde localStorage
+    // Retorna { token, user } o null si no se puede
     function getAuthContext() {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const rawUser = localStorage.getItem(AUTH_USER_KEY);
@@ -169,21 +185,26 @@
         if (!user || Object.keys(user).length === 0) return null;
         return { token, user };
       } catch {
+        // Si el JSON esta corrupto, mejor limpiar y pedir login
         clearAuth();
         return null;
       }
     }
 
+    // Muestra un mensaje debajo del formulario (exito o validacion)
     function setFormFeedback(msg) {
       document.getElementById('formFeedback').textContent = msg || '';
     }
 
+    // Muestra un error general y oculta el formulario si falla
     function showError(msg) {
       document.getElementById('loadHint').textContent = msg;
       document.getElementById('loadHint').innerHTML += ' <a href="vehiculos.html">Volver a Mis vehículos</a>';
       document.getElementById('autoForm').style.display = 'none';
     }
 
+    // Ayuda para no inyectar HTML si en algun momento imprimimos texto del backend
+    // (En este archivo actualmente no se usa, pero deja la intención clara)
     function escapeHtml(s) {
       if (!s) return '';
       const div = document.createElement('div');
@@ -191,26 +212,36 @@
       return div.innerHTML;
     }
 
+    // Carga los datos del vehiculo y precarga el formulario
     async function loadVehicle(auth) {
       const loadHint = document.getElementById('loadHint');
       const form = document.getElementById('autoForm');
       try {
+        // Pedimos el vehiculo por id
         const resp = await fetch(`${API_BASE}/autos/${vehicleId}`, {
+          // Mandamos el token para que el backend valide permisos
           headers: { 'Authorization': `Bearer ${auth.token}` }
         });
         const result = await resp.json().catch(() => ({}));
         if (!resp.ok) {
+          // Si el backend dice "no existe" o "no autorizado", mostramos mensaje
           showError(result.message || 'No se pudo cargar el vehículo.');
           return;
         }
+
+        // Algunos backends devuelven { data: ... } y otros devuelven el objeto directo
         const vehicle = result.data || result;
+
+        // Validacion de permisos: solo el dueño puede editar
         const ownerId = String(vehicle.owner_id?._id || vehicle.owner_id?.id || vehicle.owner_id || '').trim();
         const userId = String(auth.user?.id || auth.user?._id || '').trim();
         if (ownerId !== userId) {
+          // Si el vehiculo no es del usuario autenticado, no lo deja editar
           showError('No tienes permiso para editar este vehículo.');
           return;
         }
 
+        // Rellenamos los campos del formulario con los datos actuales
         document.getElementById('marca').value = vehicle.marca || '';
         document.getElementById('modelo').value = vehicle.modelo || '';
         document.getElementById('anio').value = vehicle.anio ?? '';
@@ -221,6 +252,7 @@
         document.getElementById('provincia').value = vehicle.provincia || '';
         document.getElementById('estado').value = vehicle.estado || 'disponible';
 
+        // Mostramos las fotos actuales del vehiculo
         const fotosActualesEl = document.getElementById('fotosActuales');
         const fotos = vehicle.fotos && Array.isArray(vehicle.fotos) ? vehicle.fotos : [];
         if (fotos.length > 0) {
@@ -231,14 +263,17 @@
           fotosActualesEl.innerHTML = '<span class="form-hint">Sin fotos cargadas.</span>';
         }
 
+        // Ya cargamos todo: ocultamos el "cargando" y mostramos el formulario
         loadHint.style.display = 'none';
         form.style.display = 'block';
       } catch (err) {
         console.error(err);
+        // Error inesperado (red, parseo, etc.)
         showError('Error al cargar el vehículo.');
       }
     }
 
+    // Valida los campos antes de mandar el PUT al backend
     function validateForm() {
       const marca = document.getElementById('marca').value.trim();
       const modelo = document.getElementById('modelo').value.trim();
@@ -251,17 +286,21 @@
       if (!Number.isInteger(anio) || anio < 1900 || anio > currentYear) return `El año debe estar entre 1900 y ${currentYear}.`;
       if (!Number.isFinite(precio) || precio <= 0) return 'El precio debe ser mayor que 0.';
       if (estado && !ESTADOS.includes(estado)) return 'Estado inválido.';
+      // Si el usuario eligió demasiadas imágenes nuevas, lo bloqueamos aquí
       if (fotosInput.files.length > MAX_FOTOS) return `Máximo ${MAX_FOTOS} fotos.`;
       return '';
     }
 
+    // Al enviar el formulario hacemos un PUT para guardar cambios
     document.getElementById('autoForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const auth = getAuthContext();
       if (!auth) {
+        // Si se pierde la sesion en el camino, pedimos login
         window.location.href = 'login.html';
         return;
       }
+      // Validamos lo que el usuario editó
       const err = validateForm();
       if (err) {
         setFormFeedback(err);
@@ -269,12 +308,15 @@
       }
       setFormFeedback('');
 
+      // FormData permite enviar texto + archivos en el mismo request
       const formData = new FormData();
       formData.append('marca', document.getElementById('marca').value.trim());
       formData.append('modelo', document.getElementById('modelo').value.trim());
       formData.append('anio', document.getElementById('anio').value);
       formData.append('precio', document.getElementById('precio').value);
       formData.append('estado', document.getElementById('estado').value || 'disponible');
+
+      // Campos opcionales: si el usuario deja vacio, mandamos string vacio
       const km = document.getElementById('kilometraje').value.trim();
       formData.append('kilometraje', km || '');
       formData.append('tipoCombustible', document.getElementById('tipoCombustible').value || '');
@@ -282,20 +324,26 @@
       formData.append('provincia', document.getElementById('provincia').value || '');
       const fotosInput = document.getElementById('fotos');
       for (let i = 0; i < Math.min(fotosInput.files.length, MAX_FOTOS); i++) {
+        // Enviamos las fotos nuevas (si eligió alguna). Si no eligió, el backend decide que hacer.
         formData.append('fotos', fotosInput.files[i]);
       }
 
       try {
+        // Pedimos al backend actualizar el vehiculo
         const resp = await fetch(`${API_BASE}/autos/${vehicleId}`, {
           method: 'PUT',
           headers: { 'Authorization': `Bearer ${auth.token}` },
           body: formData
         });
         const data = await resp.json().catch(() => ({}));
+        // Si el backend falla, mostramos su mensaje (si existe)
         if (!resp.ok) throw new Error(data.message || 'Error al guardar');
+
+        // Si todo sale bien, avisamos y regresamos a "Mis vehículos"
         setFormFeedback('Cambios guardados correctamente.');
         setTimeout(() => { window.location.href = 'vehiculos.html'; }, 1500);
       } catch (err) {
+        // Error de red o respuesta inesperada
         setFormFeedback(err.message || 'Error al guardar cambios');
       }
     });
