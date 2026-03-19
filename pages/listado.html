@@ -131,12 +131,17 @@
   </div>
 
   <script>
+    // Config base del backend
     const API_BASE = window.APP_CONFIG.API_BASE;
+    // (No siempre se usa en esta pagina, pero se mantiene por consistencia)
+    // Claves de sesion del navegador
     const AUTH_TOKEN_KEY = 'authToken';
     const AUTH_USER_KEY = 'authUser';
+    // Valores por defecto para paginacion
     const DEFAULT_PAGE = 1;
     const DEFAULT_LIMIT = 10;
 
+    // Arrancamos al cargar el DOM: menu -> eventos de filtros -> aplicar filtros desde URL -> cargar autos
     document.addEventListener('DOMContentLoaded', () => {
       setupNav();
       bindFilters();
@@ -144,6 +149,9 @@
       cargarAutos();
     });
 
+    // Construye el menu superior
+    // - Si el usuario esta logueado, muestra opciones para editar/publicar y un link de cerrar sesion
+    // - Si no esta logueado, muestra links mas basicos (registro/login)
     function setupNav() {
       const auth = getAuthContext();
       const nav = document.getElementById('appNav');
@@ -160,11 +168,13 @@
       }
     }
 
+    // Borra sesion local (token + usuario)
     function clearAuth() {
       localStorage.removeItem(AUTH_USER_KEY);
       localStorage.removeItem(AUTH_TOKEN_KEY);
     }
 
+    // Recupera token + usuario desde localStorage
     function getAuthContext() {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const rawUser = localStorage.getItem(AUTH_USER_KEY);
@@ -179,6 +189,7 @@
       }
     }
 
+    // Escapa texto para que no se inserte HTML accidentalmente
     function escapeHtml(s) {
       if (!s) return '';
       const div = document.createElement('div');
@@ -186,11 +197,13 @@
       return div.innerHTML;
     }
 
+    // Formatea numeros (especialmente precio) con separadores estilo Costa Rica
     function formatNumber(n) {
       if (n == null) return '0';
       return Number(n).toLocaleString('es-CR');
     }
 
+    // Toma los filtros desde la URL (query params) para que el usuario pueda compartir links con filtros
     function getQueryParams() {
       const params = new URLSearchParams(window.location.search);
       return {
@@ -208,6 +221,7 @@
       };
     }
 
+    // Arma la URL para consultar al backend con los filtros
     function buildSearchParams(filters) {
       const sp = new URLSearchParams();
       if (filters.marca) sp.set('marca', filters.marca);
@@ -224,6 +238,7 @@
       return sp;
     }
 
+    // Cuando entras con filtros en la URL, precarga los valores del formulario
     function applyFiltersFromUrl() {
       const q = getQueryParams();
       document.getElementById('fMarca').value = q.marca;
@@ -237,6 +252,7 @@
       document.getElementById('fEstado').value = q.estado;
     }
 
+    // Conecta el formulario de filtros con la navegacion por query params
     function bindFilters() {
       document.getElementById('filtersForm').addEventListener('submit', (e) => {
         e.preventDefault();
@@ -254,14 +270,17 @@
           limit: getQueryParams().limit
         };
         const search = buildSearchParams(q).toString();
+        // Cambiar la URL dispara un recargo y vuelve a ejecutar cargarAutos con esos filtros
         window.location.search = search ? '?' + search : '';
       });
 
+      // “Limpiar” borra todos los query params (vuelve a listado sin filtros)
       document.getElementById('clearFiltersBtn').addEventListener('click', () => {
         window.location.search = '';
       });
     }
 
+    // Crea botones de paginacion basados en page/totalPages
     function renderPagination(page, totalPages, totalItems) {
       const nav = document.getElementById('paginationNav');
       if (totalPages <= 1 && totalItems <= 0) {
@@ -285,6 +304,7 @@
       nav.innerHTML = html;
     }
 
+    // Busca autos en el backend usando filtros + paginacion
     async function cargarAutos() {
       const list = document.getElementById('autosList');
       const q = getQueryParams();
@@ -292,12 +312,14 @@
       const url = API_BASE + '/autos' + (search ? '?' + search : '');
 
       try {
+        // GET /autos?marca=...&page=...&limit=...
         const resp = await fetch(url);
         const result = await resp.json().catch(() => ({}));
         if (!resp.ok) {
           throw new Error(result.message || 'No se pudieron cargar los vehículos.');
         }
 
+        // El backend puede devolver la lista bajo distintas claves (data/autos)
         const autos = result.data || result.autos || [];
         const page = result.page || 1;
         const totalPages = result.totalPages || 1;
@@ -307,6 +329,7 @@
           list.innerHTML = '<li class="empty-state">No hay vehículos que coincidan con los filtros.</li>';
         } else {
           const API_ORIGIN = window.APP_CONFIG.API_ORIGIN;
+          // Pintamos cada auto en HTML (foto, marca/modelo, precio, estado, etc.)
           list.innerHTML = autos.map(auto => {
             const owner = auto.owner_id;
             const ownerLabel = owner?.nombre || owner?.username || owner || 'Sin propietario';
@@ -324,6 +347,7 @@
           }).join('');
         }
 
+        // Finalmente, mostramos o quitamos la paginacion
         renderPagination(page, totalPages, totalItems);
       } catch (err) {
         console.error(err);

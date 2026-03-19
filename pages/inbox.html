@@ -48,30 +48,42 @@
   </div>
 
   <script>
+    // Configuracion del backend
     const API_BASE = window.APP_CONFIG.API_BASE;
+    // Para construir URLs completas de imagenes (por ejemplo: http://host/uploads/imagen.jpg)
     const API_ORIGIN = window.APP_CONFIG.API_ORIGIN;
+    // Claves para leer la sesion desde localStorage
     const AUTH_TOKEN_KEY = 'authToken';
     const AUTH_USER_KEY = 'authUser';
+    // Mensajes de error “amigables” si falla cargar el contenido
     const OWNER_INBOX_ERROR = 'No se pudo cargar el inbox del propietario.';
     const MY_QUESTIONS_ERROR = 'No se pudo cargar tu historial de preguntas.';
 
+    // Elementos donde pintamos la informacion
     const ownerInboxEl = document.getElementById('ownerInbox');
     const myQuestionsEl = document.getElementById('myQuestions');
 
+    // Devuelve la URL de la foto de perfil (si existe)
     function getAvatarUrl(user, size) {
       if (!user) return '';
       const foto = user.foto_perfil;
       if (foto && String(foto).trim()) {
+        // Si viene como URL completa, la usamos tal cual.
+        // Si viene como ruta relativa, le pegamos el origen del backend.
         return foto.startsWith('http') ? foto : (API_ORIGIN + (foto.startsWith('/') ? '' : '/') + foto);
       }
       return '';
     }
+
+    // Calcula iniciales para el “avatar” cuando no hay foto
     function getInitials(nombre, username) {
       const n = (nombre || username || 'U').trim();
       const parts = n.split(/\s+/);
       if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
       return (n[0] || 'U').toUpperCase();
     }
+
+    // Renderiza el avatar: imagen si existe, o iniciales si no
     function renderAvatar(user, nameOrUsername, cssClass) {
       const url = getAvatarUrl(user, 40);
       const name = nameOrUsername || (user && (user.nombre || user.username)) || 'Usuario';
@@ -79,16 +91,20 @@
       return `<span class="avatar avatar-initials ${cssClass || ''}" aria-hidden="true">${escapeHtml(getInitials(name, user && user.username))}</span>`;
     }
 
+    // Arrancamos cuando el HTML ya esta listo
     document.addEventListener('DOMContentLoaded', init);
 
     function init() {
       const auth = getAuth();
+      // Sin sesion no hay inbox (vuelve a login)
       if (!auth) return redirectToLogin();
 
+      // Configuramos el menu superior y luego cargamos los mensajes
       setupNav();
       loadInbox(auth);
     }
 
+    // Construye el menu (incluye link de “Cerrar sesión” cuando hay sesion)
     function setupNav() {
       const nav = document.getElementById('appNav');
       const logoutIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
@@ -96,20 +112,25 @@
 
       document.getElementById('logoutLink').addEventListener('click', event => {
         event.preventDefault();
+        // Cerramos sesion localmente (limpiamos localStorage) y redirigimos a login
         clearAuth();
         redirectToLogin();
       });
     }
 
+    // Redireccion simple a login
     function redirectToLogin() {
       window.location.replace('login.html');
     }
 
+    // Limpia sesion del navegador
     function clearAuth() {
       localStorage.removeItem(AUTH_USER_KEY);
       localStorage.removeItem(AUTH_TOKEN_KEY);
     }
 
+    // Lee el token y el usuario desde localStorage
+    // Si algo falla (token ausente o JSON corrupto), devuelve null
     function getAuth() {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const rawUser = localStorage.getItem(AUTH_USER_KEY);
@@ -125,15 +146,18 @@
       }
     }
 
+    // Normaliza el id del usuario para comparaciones
     function getUserId(user) {
       return String(user?._id || user?.id || user?.userId || '').trim();
     }
 
+    // Verifica si el auto pertenece al usuario autenticado
     function isOwner(auto, userId) {
       const ownerId = String(auto?.owner_id?._id || auto?.owner_id?.id || auto?.owner_id || '').trim();
       return Boolean(userId && ownerId && userId === ownerId);
     }
 
+    // Escapa texto para evitar inyeccion HTML cuando mostramos datos del backend
     function escapeHtml(s) {
       if (!s) return '';
       const div = document.createElement('div');
@@ -141,6 +165,7 @@
       return div.innerHTML;
     }
 
+    // Algunos endpoints devuelven listas en claves distintas; esto las unifica a un array
     function normalizeList(payload, keys) {
       for (const key of keys) {
         if (Array.isArray(payload?.[key])) return payload[key];
@@ -148,11 +173,13 @@
       return [];
     }
 
+    // Algunos endpoints devuelven objetos bajo distintas claves; esto busca el “objeto real”
     function normalizeObject(payload) {
       if (!payload || typeof payload !== 'object') return null;
       return payload.data || payload.answer || payload.auto || payload.question || payload;
     }
 
+    // Llamada generica al backend: maneja Authorization + errores con mensajes
     async function api(path, auth, options = {}) {
       const url = `${API_BASE}${path}`;
       const response = await fetch(url, {
@@ -183,6 +210,7 @@
       return data;
     }
 
+    // Para cada pregunta, intenta cargar su respuesta (si existe)
     async function getAnswerForQuestion(auth, questionId) {
       try {
         const data = await api(`/answers/question/${questionId}`, auth);
@@ -192,6 +220,8 @@
       }
     }
 
+    // Trae autos del usuario autenticado.
+    // Si el backend tiene /autos/mis, se usa directamente; si no, se filtra desde /autos.
     async function getMyAutos(auth) {
       try {
         const mineData = await api('/autos/mis', auth);
@@ -203,6 +233,7 @@
       }
     }
 
+    // Construye la lista de conversaciones “como propietario” (preguntas hechas a tus autos)
     async function renderOwnerInbox(auth) {
       const myAutos = await getMyAutos(auth);
       if (!myAutos.length) {
@@ -250,6 +281,7 @@
       ownerInboxEl.innerHTML = blocks.length ? blocks.join('') : '<div class="empty-state">No se encontraron conversaciones para tus vehículos.</div>';
     }
 
+    // Construye la lista de preguntas que tú realizaste (y sus respuestas si ya existen)
     async function renderMyQuestions(auth) {
       const questionsData = await api('/questions/mine', auth);
       const questions = normalizeList(questionsData, ['data', 'questions']);
@@ -287,6 +319,7 @@
       myQuestionsEl.innerHTML = rendered.join('');
     }
 
+    // Orquesta: renderizamos ambas secciones (propietario + mis preguntas)
     async function loadInbox(auth) {
       try {
         await renderOwnerInbox(auth);
