@@ -55,36 +55,45 @@
   </div>
 
   <script>
+    // URL del backend para crear usuarios
     const REGISTER_URL = window.APP_CONFIG.API_BASE + '/users/register';
 
+    // Al enviar el formulario, mandamos los datos del nuevo usuario al backend
     document.getElementById('registroForm').addEventListener('submit', async function(event) {
       event.preventDefault();
       const nombre = document.getElementById('nombre').value.trim();
       const usuario = document.getElementById('usuario').value.trim();
       const contrasena = document.getElementById('contrasena').value;
 
+      // Validacion minima en el frontend (no reemplaza la validacion del backend)
       if (!nombre || !usuario || !contrasena) {
         alert('Por favor completa todos los campos.');
         return;
       }
 
       try {
+        // Llamada al endpoint /users/register
         const resp = await fetch(REGISTER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          // El backend espera nombre, username y password
           body: JSON.stringify({ nombre, username: usuario, password: contrasena }),
         });
         if (!resp.ok) {
+          // Si falla, intentamos leer el mensaje que manda el backend
           const errData = await resp.json().catch(() => null);
           throw new Error(errData?.message || 'Error en registro');
         }
+        // Si el backend responde OK, guia al usuario a iniciar sesion
         alert('Registro exitoso, por favor inicia sesión.');
         window.location.href = 'login.html';
       } catch (err) {
         console.error('Error en registro', err);
+        // Mensaje mas claro si el backend no responde (por ejemplo backend caido o sin Mongo)
         if (err.message === 'Load failed' || err.name === 'TypeError') {
           alert('No se pudo conectar al servidor. Comprueba que el backend esté en marcha (npm start en TicoAutos-Backend-main) y que MongoDB esté activo.');
         } else {
+          // Para otros errores, mostramos el mensaje que corresponda
           alert('Hubo un error al registrar: ' + err.message);
         }
       }

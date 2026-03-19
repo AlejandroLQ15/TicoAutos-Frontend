@@ -51,49 +51,62 @@
   </div>
 
   <script>
+    // URL del backend para autenticar usuario
     const LOGIN_URL = window.APP_CONFIG.API_BASE + '/users/login';
+    // Donde guardamos la sesion para usarla en el resto de paginas
     const AUTH_TOKEN_KEY = 'authToken';
     const AUTH_USER_KEY = 'authUser';
 
+    // Auto-redirect: si ya hay sesion guardada, no dejamos volver a login
     (function () {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const rawUser = localStorage.getItem(AUTH_USER_KEY);
       if (!token || !rawUser) return;
       try {
+        // Esperamos que authUser sea JSON valido
         const parsed = JSON.parse(rawUser);
         if (parsed && Object.keys(parsed).length > 0) {
+          // Si existe un usuario en localStorage => ya esta logueado
           window.location.replace('../index.html');
         }
       } catch {
+        // Si el JSON esta corrupto o incompleto => limpiamos y dejamos que el usuario haga login
         localStorage.removeItem(AUTH_USER_KEY);
         localStorage.removeItem(AUTH_TOKEN_KEY);
       }
     })();
 
+    // Al enviar el formulario, mandamos usuario/contraseña al backend
     document.getElementById('loginForm').addEventListener('submit', async function(event) {
       event.preventDefault();
       const usuario = document.getElementById('usuario').value.trim();
       const contrasena = document.getElementById('contrasena').value;
 
       try {
+        // Llamada al endpoint /users/login
         const resp = await fetch(LOGIN_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          // El backend espera username y password
           body: JSON.stringify({ username: usuario, password: contrasena }),
         });
         if (!resp.ok) {
+          // Si falla, intentamos sacar un mensaje del backend
           const errData = await resp.json().catch(() => null);
           throw new Error(errData?.message || 'Credenciales inválidas');
         }
+        // Si funciona, esperamos que llegue { token, user }
         const data = await resp.json().catch(() => ({}));
         if (!data.token) {
           throw new Error('No se recibió token de autenticación');
         }
+        // Guardamos el token y el usuario para usarlo mas adelante
         localStorage.setItem(AUTH_TOKEN_KEY, data.token);
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user || { username: usuario }));
         alert('Inicio de sesión exitoso');
         window.location.href = '../index.html';
       } catch (err) {
+        // Error tipico: credenciales incorrectas o backend caido
         console.error('Error en autenticación', err);
         alert(err.message || 'Credenciales inválidas');
       }
