@@ -6,7 +6,9 @@
 
   <title>TicoAutos - Inicio</title>
   
+  <!-- CSS principal del sitio -->
   <link rel="stylesheet" href="css/styles.css">
+  <!-- Config global del proyecto (por ejemplo: API_BASE y API_ORIGIN) -->
   <script src="js/config.js"></script>
 </head>
 <body>
@@ -21,15 +23,18 @@
     </header>
 
     <main class="app-main dashboard-main">
+      <!-- Bloque principal de bienvenida -->
       <section class="dashboard-hero hero-bg">
         <span class="dashboard-hero-badge">Tu lugar para comprar y vender</span>
         <h1 class="dashboard-hero-title">Bienvenido a TicoAutos</h1>
         <p class="dashboard-hero-subtitle">
           Encuentra el vehículo ideal o publica el tuyo en minutos. Sin costos ocultos y con herramientas que te ayudan a decidir.
         </p>
+        <!-- CTA: lleva directo al listado completo -->
         <a href="pages/listado.html" class="btn btn-primary btn-cta" id="heroCta">Ver todos los vehículos</a>
       </section>
 
+      <!-- “Promesa” visual del sitio (solo UI, no hace llamadas al backend) -->
       <!-- Barra de confianza con íconos -->
       <section class="trust-bar" aria-label="Ventajas de TicoAutos">
         <div class="trust-bar-inner">
@@ -49,6 +54,7 @@
       </section>
 
       <!-- Atajos con íconos -->
+      <!-- Tarjetas: sirven como navegación rápida a secciones clave -->
       <section class="dashboard-cards">
         <div class="dashboard-card">
           <div class="dashboard-card-icon" aria-hidden="true">
@@ -77,6 +83,7 @@
       </section>
 
       <!-- Carrusel -->
+      <!-- Este carrusel se llena con JavaScript (carga “vehículos destacados”) -->
       <section class="carousel-section card">
         <div class="section-head">
           <h2 class="card-title">
@@ -86,20 +93,24 @@
           <p class="section-hint">Algunos de los vehículos disponibles. Explora el listado completo para ver todos.</p>
         </div>
         <div class="carousel-wrap">
+          <!-- Donde el JS inserta las tarjetas de vehículos -->
           <div id="vehiculosInicio" class="carousel-track" role="list">
             <p class="dashboard-vehicles-loading" id="vehiculosInicioLoading">Cargando vehículos...</p>
           </div>
+          <!-- Botones que mueven el carrusel con scroll horizontal -->
           <div class="carousel-nav" aria-label="Navegación del carrusel">
             <button type="button" id="carouselPrev" aria-label="Anterior">‹</button>
             <button type="button" id="carouselNext" aria-label="Siguiente">›</button>
           </div>
         </div>
         <p class="dashboard-vehicles-more" id="vehiculosInicioMore" style="display: none;">
+          <!-- Solo se muestra si hay resultados suficientes -->
           <a href="pages/listado.html" class="btn btn-secondary">Ver listado completo</a>
         </p>
       </section>
 
       <!-- Herramientas que marcan la diferencia -->
+      <!-- Incluye una calculadora (solo front) y una sección “placa” en modo info/modal -->
       <section class="tools-section card">
         <h2 class="section-title">
           <span class="icon icon--md" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
@@ -199,6 +210,7 @@
     </div>
 
     <!-- Botón subir (aparece al hacer scroll) -->
+      <!-- Botón UX: vuelve arriba sin refrescar la página -->
     <button type="button" class="back-to-top" id="backToTop" aria-label="Volver arriba" title="Volver arriba">↑</button>
 
     <footer class="app-footer">
@@ -228,12 +240,15 @@
   </div>
 
   <script>
+    // Variables globales para conectar con el backend
     const API_BASE = window.APP_CONFIG.API_BASE;
     const API_ORIGIN = window.APP_CONFIG.API_ORIGIN;
+    // Usamos localStorage para saber si el usuario está logueado
     const AUTH_TOKEN_KEY = 'authToken';
     const AUTH_USER_KEY = 'authUser';
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Leemos sesión desde el navegador
       const authToken = localStorage.getItem(AUTH_TOKEN_KEY);
       const authUser = localStorage.getItem(AUTH_USER_KEY);
       const nav = document.getElementById('appNav');
@@ -241,18 +256,22 @@
 
       const logoutIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
       if (authToken && authUser) {
+        // Si hay sesión: el menú muestra secciones privadas y “Cerrar sesión”
         nav.innerHTML = '<a href="index.html" class="nav-active">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger">Vehículos</span><div class="nav-dropdown-menu"><a href="pages/vehiculos.html">Mis vehículos</a><a href="pages/crear-vehiculo.html">Crear vehículo</a><a href="pages/listado.html">Ver listado</a></div></div><a href="pages/inbox.html">Mensajes</a><a href="pages/perfil.html">Mi perfil</a><a href="#" id="logoutLink" class="nav-logout" title="Cerrar sesión" aria-label="Cerrar sesión">' + logoutIcon + '</a>';
         if (heroCta) { heroCta.textContent = 'Crear vehículo'; heroCta.href = 'pages/crear-vehiculo.html'; }
         document.getElementById('logoutLink').addEventListener('click', e => {
           e.preventDefault();
+          // “Cerrar sesión”: solo limpia localStorage (no llama backend)
           localStorage.removeItem(AUTH_USER_KEY);
           localStorage.removeItem(AUTH_TOKEN_KEY);
           window.location.href = 'pages/login.html';
         });
       } else {
+        // Si no hay sesión: el menú es público (listado + registro/login)
         nav.innerHTML = '<a href="index.html" class="nav-active">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger">Vehículos</span><div class="nav-dropdown-menu"><a href="pages/listado.html">Ver listado</a></div></div><a href="pages/registro.html">Registro</a><a href="pages/login.html">Iniciar sesión</a>';
       }
 
+      // Botones del carrusel: avanzan el “track” con scroll horizontal
       const track = document.querySelector('.carousel-track');
       document.getElementById('carouselPrev').addEventListener('click', () => {
         if (track) track.scrollBy({ left: -280, behavior: 'smooth' });
@@ -264,6 +283,7 @@
       // Botón volver arriba
       const backToTop = document.getElementById('backToTop');
       if (backToTop) {
+        // Se muestra cuando el usuario baja lo suficiente
         window.addEventListener('scroll', () => {
           backToTop.classList.toggle('is-visible', window.scrollY > 400);
         }, { passive: true });
@@ -272,7 +292,7 @@
         });
       }
 
-      // Animaciones al entrar en viewport
+      // Animaciones al entrar en el viewport (IntersectionObserver)
       const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -40px 0px' };
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -287,6 +307,7 @@
       // Calculadora de financiamiento
       document.getElementById('calcFinancingForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        // Usamos una aproximación de cuota tipo “interés compuesto” mensual
         const precio = Number(document.getElementById('calcPrecio').value) || 0;
         const enganchePct = Number(document.getElementById('calcEnganche').value) || 0;
         const plazo = Number(document.getElementById('calcPlazo').value) || 1;
@@ -307,6 +328,8 @@
       // Historial de placa: abrir modal
       document.getElementById('placaConsultarBtn').addEventListener('click', function() {
         const placa = document.getElementById('placaInput').value.trim();
+        // Por ahora la consulta real “todavía no existe”:
+        // el botón solo abre el modal informativo
         document.getElementById('modalPlaca').classList.add('is-open');
         document.getElementById('modalPlaca').setAttribute('aria-hidden', 'false');
       });
@@ -327,9 +350,11 @@
         }
       });
 
+      // Carga el carrusel de vehículos destacados al final de la inicializacion
       loadVehiculosInicio();
     });
 
+    // Parámetros para la “vitrina” del inicio
     function getCarouselParams() {
       const params = new URLSearchParams();
       params.set('limit', '8');
@@ -337,6 +362,7 @@
       return params.toString();
     }
 
+    // Seguridad simple al insertar texto desde el backend
     function escapeHtml(s) {
       if (!s) return '';
       const div = document.createElement('div');
@@ -344,11 +370,13 @@
       return div.innerHTML;
     }
 
+    // Formatea números con separadores locales
     function formatNumber(n) {
       if (n == null) return '0';
       return Number(n).toLocaleString('es-CR');
     }
 
+    // Carga “vehículos destacados” y los pinta como tarjetas clickeables
     async function loadVehiculosInicio() {
       const container = document.getElementById('vehiculosInicio');
       const more = document.getElementById('vehiculosInicioMore');
@@ -361,6 +389,7 @@
       const url = API_BASE + '/autos' + (query ? '?' + query : '');
 
       try {
+        // GET /autos?limit=8&page=1 (según los parámetros de arriba)
         const resp = await fetch(url);
         const result = await resp.json().catch(() => ({}));
         const loading = document.getElementById('vehiculosInicioLoading');
@@ -373,6 +402,7 @@
         const autos = result.data || result.autos || [];
 
         if (autos.length === 0) {
+          // Si no hay autos en el backend, mostramos un mensaje de “cero resultados”
           container.innerHTML = '<p class="empty-state">No hay vehículos publicados aún. Sé el primero en publicar el tuyo.</p>';
           return;
         }
@@ -381,6 +411,7 @@
           const id = auto._id || auto.id;
           const fotoUrl = auto.fotos && auto.fotos[0] ? API_ORIGIN + auto.fotos[0] : null;
           const owner = auto.owner_id?.nombre || auto.owner_id?.username || 'Anunciante';
+          // Cada tarjeta lleva a /vehicles/:id (ruta de detalle del vehículo)
           return `<a href="/vehicles/${encodeURIComponent(id)}" class="vehicle-card">
             <div class="vehicle-card-img">${fotoUrl ? `<img src="${escapeHtml(fotoUrl)}" alt="">` : '<span class="vehicle-card-noimg">Sin foto</span>'}
             </div>
@@ -393,6 +424,7 @@
         }).join('');
 
         container.classList.add('loaded');
+        // Si hay al menos 1 resultado en esta “vitrina”, mostramos el link al listado completo
         if (autos.length >= 1 && more) more.style.display = 'block';
       } catch (err) {
         console.error(err);
