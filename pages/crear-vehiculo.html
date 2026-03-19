@@ -3,53 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Titulo de la pagina -->
   <title>Crear vehículo - TicoAutos</title>
+  <!-- Estilos compartidos del frontend -->
   <link rel="stylesheet" href="../css/styles.css">
+  <!-- Config global del proyecto (por ejemplo API_BASE) -->
   <script src="../js/config.js"></script>
 </head>
 <body>
   <div class="app-shell">
+    <!-- Encabezado con logo y menu de navegacion -->
     <header class="app-header">
       <div class="app-header-inner">
         <a href="../index.html" class="app-brand">
           <img src="../assets/TicoAutos_Logo.png" alt="TicoAutos" class="app-brand-logo">
         </a>
+        <!-- Aqui se inyecta el menu con JavaScript (depende si estas logueado) -->
         <nav class="app-nav" id="appNav"></nav>
       </div>
     </header>
 
     <main class="app-main">
+      <!-- Titulo visible de la pagina -->
       <h1 class="page-title">Crear vehículo</h1>
 
+      <!-- Caja/formulario para registrar un vehiculo -->
       <section class="card">
         <h2 class="card-title">Agregar vehículo</h2>
         <form id="autoForm">
           <div class="form-row">
             <div class="form-group">
+              <!-- Marca -->
               <label class="form-label" for="marca">Marca</label>
               <input type="text" id="marca" name="marca" class="form-input" placeholder="Ej. Toyota" required>
             </div>
             <div class="form-group">
+              <!-- Modelo -->
               <label class="form-label" for="modelo">Modelo</label>
               <input type="text" id="modelo" name="modelo" class="form-input" placeholder="Ej. Corolla" required>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
+              <!-- Anio -->
               <label class="form-label" for="anio">Año</label>
               <input type="number" id="anio" name="anio" class="form-input" placeholder="Ej. 2023" min="1900" max="2100" required>
             </div>
             <div class="form-group">
+              <!-- Precio en colones -->
               <label class="form-label" for="precio">Precio (₡)</label>
               <input type="number" id="precio" name="precio" class="form-input" placeholder="Ej. 15000000" min="0" required>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
+              <!-- Kilometraje (opcional) -->
               <label class="form-label" for="kilometraje">Kilometraje</label>
               <input type="number" id="kilometraje" name="kilometraje" class="form-input" placeholder="Ej. 45000" min="0" step="1">
             </div>
             <div class="form-group">
+              <!-- Tipo de combustible -->
               <label class="form-label" for="tipoCombustible">Tipo de combustible</label>
               <select id="tipoCombustible" name="tipoCombustible" class="form-select">
                 <option value="">Seleccione</option>
@@ -60,6 +73,7 @@
               </select>
             </div>
             <div class="form-group">
+              <!-- Tipo de transmision -->
               <label class="form-label" for="tipoTransmision">Tipo de transmisión</label>
               <select id="tipoTransmision" name="tipoTransmision" class="form-select">
                 <option value="">Seleccione</option>
@@ -70,6 +84,7 @@
           </div>
           <div class="form-row">
             <div class="form-group">
+              <!-- Provincia (Costa Rica) -->
               <label class="form-label" for="provincia">Provincia (Costa Rica)</label>
               <select id="provincia" name="provincia" class="form-select">
                 <option value="">Seleccione</option>
@@ -83,6 +98,7 @@
               </select>
             </div>
             <div class="form-group">
+              <!-- Estado del vehiculo -->
               <label class="form-label" for="estado">Estado</label>
               <select id="estado" name="estado" class="form-select">
                 <option value="disponible">Disponible</option>
@@ -92,6 +108,7 @@
             </div>
           </div>
           <div class="form-group">
+            <!-- Subida de fotos (multiple) -->
             <label class="form-label" for="fotos">Fotos del vehículo</label>
             <input type="file" id="fotos" name="fotos" class="form-input" accept="image/jpeg,image/png,image/gif,image/webp" multiple>
             <span class="form-hint">Puedes elegir varias fotos a la vez (máximo 10). JPEG, PNG, GIF o WebP. Hasta 5 MB cada una.</span>
@@ -115,34 +132,45 @@
   </div>
 
   <script>
+    // Base del API (viene de ../js/config.js)
     const API_BASE = window.APP_CONFIG.API_BASE;
+    // Claves usadas en localStorage para mantener la sesion
     const AUTH_TOKEN_KEY = 'authToken';
     const AUTH_USER_KEY = 'authUser';
+    // Valores permitidos para el estado (usado en validacion)
     const ESTADOS = ['disponible', 'reservado', 'vendido'];
+    // Limite de fotos que el formulario permite enviar
     const MAX_FOTOS = 10;
 
+    // Cuando la pagina esta lista, checamos si el usuario esta logueado
     document.addEventListener('DOMContentLoaded', () => {
       const auth = getAuthContext();
       if (!auth) {
+        // Si no hay sesion, mandamos a login
         window.location.replace('login.html');
         return;
       }
 
       const nav = document.getElementById('appNav');
+      // Icono para el boton de cerrar sesion
       const logoutIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
       nav.innerHTML = '<a href="../index.html">Inicio</a><div class="nav-dropdown"><span class="nav-dropdown-trigger nav-active">Vehículos</span><div class="nav-dropdown-menu"><a href="vehiculos.html">Mis vehículos</a><a href="crear-vehiculo.html">Crear vehículo</a><a href="listado.html">Ver listado</a></div></div><a href="inbox.html">Mensajes</a><a href="perfil.html">Mi perfil</a><a href="#" id="logoutLink" class="nav-logout" title="Cerrar sesión" aria-label="Cerrar sesión">' + logoutIcon + '</a>';
       document.getElementById('logoutLink').addEventListener('click', e => {
         e.preventDefault();
+        // Borramos sesion y volvemos a login
         clearAuth();
         window.location.href = 'login.html';
       });
     });
 
+    // Limpia la sesion guardada (token y usuario)
     function clearAuth() {
       localStorage.removeItem(AUTH_USER_KEY);
       localStorage.removeItem(AUTH_TOKEN_KEY);
     }
 
+    // Intenta recuperar sesion desde localStorage
+    // Devuelve {token, user} o null si algo sale mal
     function getAuthContext() {
       const token = localStorage.getItem(AUTH_TOKEN_KEY);
       const rawUser = localStorage.getItem(AUTH_USER_KEY);
@@ -157,11 +185,13 @@
       }
     }
 
+    // Muestra un mensaje al usuario (exito o error) debajo del formulario
     function setFormFeedback(message) {
       const feedback = document.getElementById('formFeedback');
       feedback.textContent = message || '';
     }
 
+    // Valida lo que el usuario ingreso antes de llamar al backend
     function validateForm() {
       const marca = document.getElementById('marca').value.trim();
       const modelo = document.getElementById('modelo').value.trim();
@@ -181,6 +211,7 @@
       return '';
     }
 
+    // Al enviar el formulario, lo convertimos en FormData y lo mandamos al API
     document.getElementById('autoForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const auth = getAuthContext();
@@ -190,16 +221,19 @@
         return;
       }
 
+      // 1) Validar campos antes de enviar
       const validationError = validateForm();
       if (validationError) {
         setFormFeedback(validationError);
         return;
       }
 
+      // 2) Limpiar mensaje anterior si todo esta bien
       setFormFeedback('');
 
       const form = document.getElementById('autoForm');
       const formData = new FormData();
+      // Estos nombres deben coincidir con lo que espera el backend
       formData.append('marca', document.getElementById('marca').value.trim());
       formData.append('modelo', document.getElementById('modelo').value.trim());
       formData.append('anio', document.getElementById('anio').value);
@@ -215,24 +249,31 @@
       if (provincia) formData.append('provincia', provincia);
       const fotosInput = document.getElementById('fotos');
       for (let i = 0; i < Math.min(fotosInput.files.length, MAX_FOTOS); i++) {
+        // Las fotos se envian una por una, como campo "fotos"
         formData.append('fotos', fotosInput.files[i]);
       }
 
       try {
+        // Llamada al backend para crear/guardar el vehiculo
         const resp = await fetch(`${API_BASE}/autos`, {
           method: 'POST',
+          // Token tipo Bearer para autorizar
           headers: { 'Authorization': `Bearer ${auth.token}` },
+          // multipart/form-data se encarga solo FormData
           body: formData
         });
 
+        // Intentamos leer un json de error, si el backend lo manda
         const data = await resp.json().catch(() => ({}));
         if (!resp.ok) {
           throw new Error(data.message || 'Error al guardar');
         }
 
+        // Si todo sale bien, limpiamos el formulario y avisamos al usuario
         form.reset();
         setFormFeedback('Vehículo registrado con éxito.');
       } catch (err) {
+        // Si hay error de red o respuesta no esperada
         setFormFeedback(err.message || 'Error al agregar vehículo');
       }
     });
