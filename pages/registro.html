@@ -8,6 +8,19 @@
   
   <link rel="stylesheet" href="../css/login.css">
   <script src="../js/config.js"></script>
+  <style>
+    .cedula-row { display: flex; gap: 8px; align-items: flex-start; }
+    .cedula-row .form-input { flex: 1; }
+    .btn-buscar-cedula { padding: 10px 14px; background: #4F6D7A; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85rem; white-space: nowrap; }
+    .btn-buscar-cedula:disabled { opacity: 0.6; cursor: not-allowed; }
+    .divider { display: flex; align-items: center; gap: 10px; margin: 14px 0; color: #888; font-size: 0.85rem; }
+    .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #ddd; }
+    .btn-google { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 11px; border: 1.5px solid #ddd; border-radius: 8px; background: #fff; cursor: pointer; font-size: 0.95rem; font-weight: 500; color: #333; transition: background 0.15s; }
+    .btn-google:hover { background: #f5f5f5; }
+    .btn-google svg { flex-shrink: 0; }
+    .field-readonly { background: #f0f0f0; cursor: not-allowed; }
+    .google-badge { display: inline-block; background: #4285F4; color: #fff; font-size: 0.75rem; padding: 2px 7px; border-radius: 9px; margin-left: 6px; vertical-align: middle; }
+  </style>
 </head>
 <body class="auth-page">
   <div class="auth-page-inner">
@@ -15,25 +28,77 @@
     <div class="auth-card">
       <div class="auth-header">
         <img src="../assets/TicoAutos_Logo.png" alt="TicoAutos" class="auth-logo-img">
-        <h1 class="auth-title">Crear cuenta</h1>
-        <p class="auth-subtitle">Regístrate para acceder al sistema</p>
+        <h1 class="auth-title" id="pageTitle">Crear cuenta</h1>
+        <p class="auth-subtitle" id="pageSubtitle">Regístrate para acceder al sistema</p>
       </div>
 
+      <!-- Formulario de registro normal o completar registro con Google -->
       <form id="registroForm" class="auth-form">
+        <!-- Cédula (con autocompletado) -->
+        <div class="form-group">
+          <label class="form-label" for="cedula">Número de cédula</label>
+          <div class="cedula-row">
+            <input type="text" id="cedula" name="cedula" class="form-input"
+                   placeholder="Ej: 123456789" maxlength="9" required>
+            <button type="button" id="btnBuscarCedula" class="btn-buscar-cedula">Buscar</button>
+          </div>
+          <small id="cedulaStatus" style="color:#888;font-size:0.8rem;"></small>
+        </div>
+
+        <!-- Nombre (se autocompleta con la cédula) -->
         <div class="form-group">
           <label class="form-label" for="nombre">Nombre completo</label>
-          <input type="text" id="nombre" name="nombre" class="form-input" placeholder="Tu nombre" required>
+          <input type="text" id="nombre" name="nombre" class="form-input"
+                 placeholder="Se autocompleta con la cédula" required>
         </div>
+
+        <!-- Email -->
         <div class="form-group">
-          <label class="form-label" for="usuario">Usuario</label>
-          <input type="text" id="usuario" name="usuario" class="form-input" placeholder="Nombre de usuario" required>
+          <label class="form-label" for="email">Correo electrónico</label>
+          <input type="email" id="email" name="email" class="form-input"
+                 placeholder="tu@correo.com" required>
         </div>
+
+        <!-- Teléfono -->
         <div class="form-group">
-          <label class="form-label" for="contrasena">Contraseña</label>
-          <input type="password" id="contrasena" name="contrasena" class="form-input" placeholder="Contraseña segura" required>
+          <label class="form-label" for="telefono">Teléfono</label>
+          <input type="tel" id="telefono" name="telefono" class="form-input"
+                 placeholder="Ej: 88001234" required>
         </div>
-        <button type="submit" class="btn-submit">Crear cuenta</button>
+
+        <!-- Usuario y contraseña — se ocultan en flujo Google -->
+        <div id="camposTradicionales">
+          <div class="form-group">
+            <label class="form-label" for="usuario">Usuario</label>
+            <input type="text" id="usuario" name="usuario" class="form-input"
+                   placeholder="Nombre de usuario">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="contrasena">Contraseña</label>
+            <input type="password" id="contrasena" name="contrasena" class="form-input"
+                   placeholder="Contraseña segura">
+          </div>
+        </div>
+
+        <!-- Campo oculto para flujo Google -->
+        <input type="hidden" id="googleId" name="googleId" value="">
+
+        <button type="submit" class="btn-submit" id="btnSubmit">Crear cuenta</button>
       </form>
+
+      <!-- Separador y botón Google (solo en flujo normal, no cuando se viene de Google) -->
+      <div id="seccionGoogle">
+        <div class="divider">o</div>
+        <button class="btn-google" id="btnGoogle">
+          <svg width="18" height="18" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.1 0 5.8 1.1 8 2.9l6-6C34.3 3 29.4 1 24 1 14.6 1 6.7 6.7 3.2 14.7l7 5.4C12 14.4 17.5 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.4 5.7c4.3-4 6.8-9.9 6.8-16.9z"/>
+            <path fill="#FBBC05" d="M10.2 28.6A14.8 14.8 0 0 1 9.5 24c0-1.6.3-3.2.7-4.6l-7-5.4A23.3 23.3 0 0 0 .5 24c0 3.8.9 7.4 2.5 10.6l7.2-6z"/>
+            <path fill="#34A853" d="M24 47c5.4 0 10-1.8 13.3-4.9l-7.4-5.7c-1.8 1.2-4.1 2-6.9 2-6.5 0-12-4.9-13.8-11.4l-7.2 6C6.6 41.3 14.6 47 24 47z"/>
+          </svg>
+          Continuar con Google
+        </button>
+      </div>
 
       <div class="auth-footer">
         <p>¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
@@ -55,16 +120,125 @@
   </div>
 
   <script>
-    const REGISTER_URL = window.APP_CONFIG.API_BASE + '/users/register';
+    const API_BASE       = window.APP_CONFIG.API_BASE;
+    const REGISTER_URL   = API_BASE + '/users/register';
+    const CEDULA_URL     = API_BASE + '/users/cedula/';
+    const GOOGLE_REG_URL = API_BASE + '/auth/google/register';
+    const API_ORIGIN     = window.APP_CONFIG.API_ORIGIN;
 
-    document.getElementById('registroForm').addEventListener('submit', async function(event) {
+    // ── Detectar si venimos del flujo OAuth de Google ─────────────────────────
+    const params   = new URLSearchParams(window.location.search);
+    const isGoogle = params.get('google') === 'true';
+    const googleId = params.get('googleId') || '';
+    const googleEmail = params.get('email') || '';
+    const googleName  = params.get('googleName') || '';
+
+    if (isGoogle) {
+      document.getElementById('pageTitle').textContent    = 'Completar registro';
+      document.getElementById('pageSubtitle').innerHTML   = 'Cuenta de Google detectada <span class="google-badge">Google</span>';
+      document.getElementById('seccionGoogle').style.display = 'none';
+      document.getElementById('camposTradicionales').style.display = 'none';
+      document.getElementById('btnSubmit').textContent    = 'Finalizar registro';
+      document.getElementById('googleId').value           = googleId;
+
+      // Pre-rellenar email (read-only en flujo Google)
+      const emailInput = document.getElementById('email');
+      emailInput.value     = googleEmail;
+      emailInput.readOnly  = true;
+      emailInput.classList.add('field-readonly');
+
+      // Pre-rellenar nombre si viene de Google (el usuario puede editarlo)
+      if (googleName) document.getElementById('nombre').value = googleName;
+
+      // En flujo Google, usuario y contraseña no son obligatorios
+      document.getElementById('usuario').removeAttribute('required');
+      document.getElementById('contrasena').removeAttribute('required');
+    }
+
+    // ── Autocompletar nombre con la cédula ────────────────────────────────────
+    async function buscarCedula() {
+      const cedula = document.getElementById('cedula').value.trim();
+      const status = document.getElementById('cedulaStatus');
+      const btn    = document.getElementById('btnBuscarCedula');
+
+      if (!/^\d{9}$/.test(cedula)) {
+        status.style.color = '#c00';
+        status.textContent = 'La cédula debe tener exactamente 9 dígitos.';
+        return;
+      }
+
+      btn.disabled    = true;
+      status.style.color = '#888';
+      status.textContent  = 'Consultando padrón...';
+
+      try {
+        const resp = await fetch(CEDULA_URL + cedula);
+        const data = await resp.json();
+        if (resp.ok && data.success && data.nombre) {
+          document.getElementById('nombre').value = data.nombre;
+          status.style.color = 'green';
+          status.textContent  = '✓ Cédula encontrada: ' + data.nombre;
+        } else {
+          status.style.color = '#c00';
+          status.textContent  = data.message || 'Cédula no encontrada en el padrón.';
+          document.getElementById('nombre').value = '';
+        }
+      } catch (err) {
+        status.style.color = '#c00';
+        status.textContent  = 'No se pudo conectar al servicio de cédulas.';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    document.getElementById('btnBuscarCedula').addEventListener('click', buscarCedula);
+    document.getElementById('cedula').addEventListener('blur', function () {
+      if (this.value.trim().length === 9) buscarCedula();
+    });
+
+    // ── Envío del formulario ──────────────────────────────────────────────────
+    document.getElementById('registroForm').addEventListener('submit', async function (event) {
       event.preventDefault();
-      const nombre = document.getElementById('nombre').value.trim();
-      const usuario = document.getElementById('usuario').value.trim();
+
+      const nombre   = document.getElementById('nombre').value.trim();
+      const cedula   = document.getElementById('cedula').value.trim();
+      const email    = document.getElementById('email').value.trim();
+      const telefono = document.getElementById('telefono').value.trim();
+
+      if (!nombre || !cedula || !email || !telefono) {
+        alert('Por favor completa todos los campos.');
+        return;
+      }
+      if (!/^\d{9}$/.test(cedula)) {
+        alert('La cédula debe tener 9 dígitos.');
+        return;
+      }
+
+      // ── Flujo Google: completar registro ─────────────────────────────────
+      if (isGoogle) {
+        try {
+          const resp = await fetch(GOOGLE_REG_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ googleId, email, nombre, cedula, telefono })
+          });
+          const data = await resp.json().catch(() => null);
+          if (!resp.ok) throw new Error(data?.message || 'Error al completar registro.');
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('authUser', JSON.stringify(data.user));
+          window.location.href = '../index.html';
+        } catch (err) {
+          alert('Error: ' + err.message);
+        }
+        return;
+      }
+
+      // ── Flujo tradicional: registro con usuario y contraseña ──────────────
+      const usuario   = document.getElementById('usuario').value.trim();
       const contrasena = document.getElementById('contrasena').value;
 
-      if (!nombre || !usuario || !contrasena) {
-        alert('Por favor completa todos los campos.');
+      if (!usuario || !contrasena) {
+        alert('Por favor completa el usuario y la contraseña.');
         return;
       }
 
@@ -72,7 +246,7 @@
         const resp = await fetch(REGISTER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nombre, username: usuario, password: contrasena }),
+          body: JSON.stringify({ nombre, username: usuario, password: contrasena, cedula, email, telefono })
         });
         if (!resp.ok) {
           const errData = await resp.json().catch(() => null);
@@ -82,12 +256,17 @@
         window.location.href = 'login.html';
       } catch (err) {
         console.error('Error en registro', err);
-        if (err.message === 'Load failed' || err.name === 'TypeError') {
-          alert('No se pudo conectar al servidor. Comprueba que el backend esté en marcha (npm start en TicoAutos-Backend-main) y que MongoDB esté activo.');
+        if (err.name === 'TypeError') {
+          alert('No se pudo conectar al servidor. Comprueba que el backend esté en marcha.');
         } else {
-          alert('Hubo un error al registrar: ' + err.message);
+          alert('Error al registrar: ' + err.message);
         }
       }
+    });
+
+    // ── Botón Google ──────────────────────────────────────────────────────────
+    document.getElementById('btnGoogle').addEventListener('click', function () {
+      window.location.href = API_ORIGIN + '/api/auth/google';
     });
   </script>
 </body>
