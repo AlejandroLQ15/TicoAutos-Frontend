@@ -129,11 +129,26 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: usuario, password: contrasena }),
         });
-        if (!resp.ok) {
-          const errData = await resp.json().catch(() => null);
-          throw new Error(errData?.message || 'Credenciales inválidas');
-        }
         const data = await resp.json().catch(() => ({}));
+
+        // ── Cuenta pendiente de activación ──────────────────────────────────
+        if (resp.status === 403 && data.code === 'PENDING_ACTIVATION') {
+          window.location.href = `cuenta-pendiente.html`;
+          return;
+        }
+
+        if (!resp.ok) {
+          throw new Error(data?.message || 'Credenciales inválidas');
+        }
+
+        // ── Requiere 2FA: guardar token temporal y redirigir ─────────────────
+        if (data.requiresTwoFactor && data.pendingLoginToken) {
+          sessionStorage.setItem('pendingLoginToken', data.pendingLoginToken);
+          window.location.href = 'verificar-sms.html';
+          return;
+        }
+
+        // ── Login directo: guardar sesión y redirigir ─────────────────────────
         if (!data.token) throw new Error('No se recibió token de autenticación');
         localStorage.setItem(AUTH_TOKEN_KEY, data.token);
         localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user || { username: usuario }));

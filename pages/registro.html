@@ -248,12 +248,12 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nombre, username: usuario, password: contrasena, cedula, email, telefono })
         });
+        const data = await resp.json().catch(() => null);
         if (!resp.ok) {
-          const errData = await resp.json().catch(() => null);
-          throw new Error(errData?.message || 'Error en registro');
+          throw new Error(data?.message || 'Error en registro');
         }
-        alert('Registro exitoso, por favor inicia sesión.');
-        window.location.href = 'login.html';
+        // Registro exitoso → cuenta pendiente de activación
+        window.location.href = `cuenta-pendiente.html?email=${encodeURIComponent(email)}`;
       } catch (err) {
         console.error('Error en registro', err);
         if (err.name === 'TypeError') {
