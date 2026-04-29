@@ -51,6 +51,14 @@
               <input type="number" id="fMaxPrecio" name="maxPrecio" class="form-input" placeholder="Ej. 20000000" min="0">
             </div>
             <div class="form-group">
+              <label class="form-label" for="fMinKm">Kilometraje mín.</label>
+              <input type="number" id="fMinKm" name="minKilometraje" class="form-input" placeholder="Ej. 0" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fMaxKm">Kilometraje máx.</label>
+              <input type="number" id="fMaxKm" name="maxKilometraje" class="form-input" placeholder="Ej. 120000" min="0">
+            </div>
+            <div class="form-group">
               <label class="form-label" for="fCombustible">Combustible</label>
               <select id="fCombustible" name="tipoCombustible" class="form-select">
                 <option value="">Todos</option>
@@ -75,6 +83,19 @@
                 <option value="disponible">Disponible</option>
                 <option value="reservado">Reservado</option>
                 <option value="vendido">Vendido</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fProvincia">Provincia</label>
+              <select id="fProvincia" name="provincia" class="form-select">
+                <option value="">Todas</option>
+                <option value="Alajuela">Alajuela</option>
+                <option value="Cartago">Cartago</option>
+                <option value="Guanacaste">Guanacaste</option>
+                <option value="Heredia">Heredia</option>
+                <option value="Limón">Limón</option>
+                <option value="Puntarenas">Puntarenas</option>
+                <option value="San José">San José</option>
               </select>
             </div>
             <div class="form-group form-group-actions">
@@ -200,9 +221,12 @@
         maxAnio: params.get('maxAnio') || '',
         minPrecio: params.get('minPrecio') || '',
         maxPrecio: params.get('maxPrecio') || '',
+        minKilometraje: params.get('minKilometraje') || '',
+        maxKilometraje: params.get('maxKilometraje') || '',
         tipoCombustible: params.get('tipoCombustible') || '',
         tipoTransmision: params.get('tipoTransmision') || '',
         estado: params.get('estado') || '',
+        provincia: params.get('provincia') || '',
         page: Math.max(1, parseInt(params.get('page'), 10) || DEFAULT_PAGE),
         limit: Math.min(100, Math.max(1, parseInt(params.get('limit'), 10) || DEFAULT_LIMIT))
       };
@@ -216,9 +240,12 @@
       if (filters.maxAnio) sp.set('maxAnio', filters.maxAnio);
       if (filters.minPrecio) sp.set('minPrecio', filters.minPrecio);
       if (filters.maxPrecio) sp.set('maxPrecio', filters.maxPrecio);
+      if (filters.minKilometraje) sp.set('minKilometraje', filters.minKilometraje);
+      if (filters.maxKilometraje) sp.set('maxKilometraje', filters.maxKilometraje);
       if (filters.tipoCombustible) sp.set('tipoCombustible', filters.tipoCombustible);
       if (filters.tipoTransmision) sp.set('tipoTransmision', filters.tipoTransmision);
       if (filters.estado) sp.set('estado', filters.estado);
+      if (filters.provincia) sp.set('provincia', filters.provincia);
       sp.set('page', String(filters.page));
       sp.set('limit', String(filters.limit));
       return sp;
@@ -232,9 +259,12 @@
       document.getElementById('fMaxAnio').value = q.maxAnio;
       document.getElementById('fMinPrecio').value = q.minPrecio;
       document.getElementById('fMaxPrecio').value = q.maxPrecio;
+      document.getElementById('fMinKm').value = q.minKilometraje;
+      document.getElementById('fMaxKm').value = q.maxKilometraje;
       document.getElementById('fCombustible').value = q.tipoCombustible;
       document.getElementById('fTransmision').value = q.tipoTransmision;
       document.getElementById('fEstado').value = q.estado;
+      document.getElementById('fProvincia').value = q.provincia;
     }
 
     function bindFilters() {
@@ -247,9 +277,12 @@
           maxAnio: document.getElementById('fMaxAnio').value.trim(),
           minPrecio: document.getElementById('fMinPrecio').value.trim(),
           maxPrecio: document.getElementById('fMaxPrecio').value.trim(),
+          minKilometraje: document.getElementById('fMinKm').value.trim(),
+          maxKilometraje: document.getElementById('fMaxKm').value.trim(),
           tipoCombustible: document.getElementById('fCombustible').value.trim(),
           tipoTransmision: document.getElementById('fTransmision').value.trim(),
           estado: document.getElementById('fEstado').value.trim(),
+          provincia: document.getElementById('fProvincia').value.trim(),
           page: 1,
           limit: getQueryParams().limit
         };
@@ -319,7 +352,7 @@
                 <span class="auto-info">${escapeHtml(auto.marca)} ${escapeHtml(auto.modelo)}</span>
                 <span class="auto-meta">${auto.anio || ''} · ₡${formatNumber(auto.precio)} · ${escapeHtml(auto.estado || 'disponible')}${extra ? ' · ' + escapeHtml(extra) : ''} · ${escapeHtml(String(ownerLabel))}</span>
               </div>
-              <div class="auto-actions"><a class="btn btn-light btn-sm" href="/vehicles/${encodeURIComponent(auto._id || auto.id)}">Ver vehículo</a></div>
+              <div class="auto-actions"><a class="btn btn-light btn-sm" href="vehiculo.html?id=${encodeURIComponent(auto._id || auto.id)}">Ver vehículo</a></div>
             </li>`;
           }).join('');
         }

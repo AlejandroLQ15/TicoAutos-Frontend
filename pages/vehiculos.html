@@ -21,10 +21,10 @@
     </header>
 
     <main class="app-main">
-      <h1 class="page-title">Mis vehículos</h1>
+      <h1 class="page-title">Mis anuncios</h1>
 
       <section class="card">
-        <h2 class="card-title">Mis vehículos</h2>
+        <h2 class="card-title">Panel de Mis Anuncios</h2>
         <p class="section-hint">Solo se muestran las publicaciones del usuario autenticado.</p>
         <ul id="autosList" class="autos-list"></ul>
       </section>
@@ -160,7 +160,7 @@
               <span class="auto-status ${statusClass}">${statusLabel}</span>
             </div>
             <div class="auto-actions">
-              <a class="btn btn-light btn-sm" href="/vehicles/${encodeURIComponent(autoId)}">Ver vehículo</a>
+              <a class="btn btn-light btn-sm" href="vehiculo.html?id=${encodeURIComponent(autoId)}">Ver vehículo</a>
               <a class="btn btn-light btn-sm" href="editar-vehiculo.html?id=${autoId}">Editar</a>
               ${!sold ? `<button type="button" class="btn btn-secondary btn-sm" onclick="marcarComoVendido('${autoId}')">Marcar como vendido</button>` : ''}
               <button type="button" class="btn btn-danger btn-sm" onclick="eliminarAuto('${autoId}')">Eliminar</button>
