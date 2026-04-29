@@ -96,6 +96,16 @@
     window.location.replace('login.html');
   }
 
+  // ── Mostrar advertencia si el SMS no fue entregado ───────────────────────
+  const smsWarning = sessionStorage.getItem('smsWarning');
+  if (smsWarning) {
+    sessionStorage.removeItem('smsWarning');
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:#fff3cd;border:1px solid #ffc107;color:#856404;padding:10px 14px;border-radius:8px;margin-bottom:16px;font-size:0.88rem;text-align:center;';
+    banner.textContent = '⚠️ ' + smsWarning;
+    document.querySelector('.card') && document.querySelector('.card').prepend(banner);
+  }
+
   // ── OTP Input: navegación automática entre dígitos ───────────────────────
   const digits = Array.from(document.querySelectorAll('.otp-digit'));
 

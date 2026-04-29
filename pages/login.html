@@ -144,6 +144,9 @@
         // ── Requiere 2FA: guardar token temporal y redirigir ─────────────────
         if (data.requiresTwoFactor && data.pendingLoginToken) {
           sessionStorage.setItem('pendingLoginToken', data.pendingLoginToken);
+          if (data.smsSent === false) {
+            sessionStorage.setItem('smsWarning', 'El SMS no pudo ser entregado. Revisa la consola del servidor para obtener el código OTP.');
+          }
           window.location.href = 'verificar-sms.html';
           return;
         }
