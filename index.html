@@ -48,6 +48,56 @@
         </div>
       </section>
 
+      <section class="card home-search-card">
+        <div class="section-head">
+          <h2 class="card-title">Busqueda y Filtros en tiempo real</h2>
+          <p class="section-hint">Encuentra por marca, modelo, precio y año desde el inicio.</p>
+        </div>
+
+        <div class="home-search-bar-wrap">
+          <label for="homeSearchInput" class="form-label">Buscar vehículo</label>
+          <input type="text" id="homeSearchInput" class="form-input home-search-input" placeholder="Ej. Toyota Corolla" autocomplete="off">
+        </div>
+
+        <div class="home-search-layout">
+          <aside class="home-search-sidebar" aria-label="Filtros laterales">
+            <div class="form-group">
+              <label class="form-label" for="homeMarca">Marca</label>
+              <input type="text" id="homeMarca" class="form-input" placeholder="Ej. Toyota">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="homeModelo">Modelo</label>
+              <input type="text" id="homeModelo" class="form-input" placeholder="Ej. Corolla">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="homeMinPrecio">Precio minimo (₡)</label>
+              <input type="number" id="homeMinPrecio" class="form-input" min="0" placeholder="Ej. 1000000">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="homeMaxPrecio">Precio maximo (₡)</label>
+              <input type="number" id="homeMaxPrecio" class="form-input" min="0" placeholder="Ej. 20000000">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="homeMinAnio">Año desde</label>
+              <input type="number" id="homeMinAnio" class="form-input" min="1900" max="2100" placeholder="Ej. 2016">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="homeMaxAnio">Año hasta</label>
+              <input type="number" id="homeMaxAnio" class="form-input" min="1900" max="2100" placeholder="Ej. 2025">
+            </div>
+            <div class="home-search-sidebar-actions">
+              <button type="button" id="homeApplyFiltersBtn" class="btn btn-primary btn-sm">Aplicar</button>
+              <button type="button" id="homeClearFiltersBtn" class="btn btn-light btn-sm">Limpiar</button>
+            </div>
+          </aside>
+
+          <div class="home-search-results">
+            <p class="section-hint" id="homeSearchHint">Escribe o aplica filtros para ver resultados al instante.</p>
+            <div id="homeSearchResults" class="home-results-grid" role="list"></div>
+          </div>
+        </div>
+      </section>
+
       <!-- Atajos con íconos -->
       <section class="dashboard-cards">
         <div class="dashboard-card">
@@ -327,8 +377,125 @@
         }
       });
 
+      initHomeSearch();
       loadVehiculosInicio();
     });
+
+    let homeSearchTimer = null;
+
+    function initHomeSearch() {
+      const searchInput = document.getElementById('homeSearchInput');
+      const applyBtn = document.getElementById('homeApplyFiltersBtn');
+      const clearBtn = document.getElementById('homeClearFiltersBtn');
+      if (!searchInput || !applyBtn || !clearBtn) return;
+
+      const dynamicInputs = [
+        'homeMarca',
+        'homeModelo',
+        'homeMinPrecio',
+        'homeMaxPrecio',
+        'homeMinAnio',
+        'homeMaxAnio'
+      ];
+
+      searchInput.addEventListener('input', () => {
+        if (homeSearchTimer) clearTimeout(homeSearchTimer);
+        homeSearchTimer = setTimeout(() => {
+          loadHomeSearchResults();
+        }, 300);
+      });
+
+      dynamicInputs.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('change', loadHomeSearchResults);
+      });
+
+      applyBtn.addEventListener('click', loadHomeSearchResults);
+      clearBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        dynamicInputs.forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.value = '';
+        });
+        loadHomeSearchResults();
+      });
+
+      loadHomeSearchResults();
+    }
+
+    function getHomeFilters() {
+      return {
+        search: (document.getElementById('homeSearchInput')?.value || '').trim(),
+        marca: (document.getElementById('homeMarca')?.value || '').trim(),
+        modelo: (document.getElementById('homeModelo')?.value || '').trim(),
+        minPrecio: (document.getElementById('homeMinPrecio')?.value || '').trim(),
+        maxPrecio: (document.getElementById('homeMaxPrecio')?.value || '').trim(),
+        minAnio: (document.getElementById('homeMinAnio')?.value || '').trim(),
+        maxAnio: (document.getElementById('homeMaxAnio')?.value || '').trim()
+      };
+    }
+
+    function buildHomeSearchParams() {
+      const filters = getHomeFilters();
+      const params = new URLSearchParams();
+      if (filters.search) params.set('search', filters.search);
+      if (filters.marca) params.set('marca', filters.marca);
+      if (filters.modelo) params.set('modelo', filters.modelo);
+      if (filters.minPrecio) params.set('minPrecio', filters.minPrecio);
+      if (filters.maxPrecio) params.set('maxPrecio', filters.maxPrecio);
+      if (filters.minAnio) params.set('minAnio', filters.minAnio);
+      if (filters.maxAnio) params.set('maxAnio', filters.maxAnio);
+      params.set('page', '1');
+      params.set('limit', '12');
+      return params.toString();
+    }
+
+    async function loadHomeSearchResults() {
+      const container = document.getElementById('homeSearchResults');
+      const hint = document.getElementById('homeSearchHint');
+      if (!container || !hint) return;
+
+      container.innerHTML = '<p class="dashboard-vehicles-loading">Buscando...</p>';
+
+      const query = buildHomeSearchParams();
+      const url = API_BASE + '/autos' + (query ? '?' + query : '');
+
+      try {
+        const resp = await fetch(url);
+        const result = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          container.innerHTML = '<p class="empty-state">No fue posible cargar la búsqueda.</p>';
+          return;
+        }
+
+        const autos = result.data || result.autos || [];
+        if (!autos.length) {
+          hint.textContent = 'No se encontraron vehículos con esos filtros.';
+          container.innerHTML = '<p class="empty-state">Intenta ajustar marca, modelo, precio o año.</p>';
+          return;
+        }
+
+        hint.textContent = 'Resultados dinámicos en tiempo real.';
+        container.innerHTML = autos.map(auto => {
+          const id = auto._id || auto.id;
+          const fotoUrl = auto.fotos && auto.fotos[0] ? API_ORIGIN + auto.fotos[0] : null;
+          const owner = auto.owner_id?.nombre || auto.owner_id?.username || 'Anunciante';
+          return `<a href="/pages/vehiculo.html?id=${encodeURIComponent(id)}" class="vehicle-card" role="listitem">
+            <div class="vehicle-card-img">${fotoUrl ? `<img src="${escapeHtml(fotoUrl)}" alt="">` : '<span class="vehicle-card-noimg">Sin foto</span>'}
+            </div>
+            <div class="vehicle-card-body">
+              <span class="vehicle-card-title">${escapeHtml(auto.marca || '')} ${escapeHtml(auto.modelo || '')}</span>
+              <span class="vehicle-card-meta">${auto.anio || ''} · ₡${formatNumber(auto.precio)} · ${escapeHtml(auto.estado || 'disponible')}</span>
+              <span class="vehicle-card-owner">${escapeHtml(String(owner))}</span>
+            </div>
+          </a>`;
+        }).join('');
+      } catch (error) {
+        console.error(error);
+        container.innerHTML = '<p class="empty-state">Error al consultar vehículos.</p>';
+      }
+    }
 
     function getCarouselParams() {
       const params = new URLSearchParams();
