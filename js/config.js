@@ -4,6 +4,7 @@
  * En producción: cambia API_BASE y API_ORIGIN por la URL de tu backend
  * (ej: https://api.tudominio.com/api y https://api.tudominio.com).
  */
+
 (function () {
   'use strict';
   var isLocal = /localhost|127\.0\.0\.1/i.test(window.location.hostname);
