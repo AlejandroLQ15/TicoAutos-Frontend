@@ -66,6 +66,21 @@
                  placeholder="Ej: 88001234" required>
         </div>
 
+        <!-- Fecha de nacimiento: la toma el padrón si existe; si no, la declaras tú (mayoría de edad). -->
+        <div id="bloqueFechaNacimiento" class="form-group">
+          <label class="form-label" for="fechaNacimientoDeclarada">Fecha de nacimiento</label>
+          <input type="date" id="fechaNacimientoDeclarada" name="fechaNacimientoDeclarada" class="form-input"
+                 autocomplete="bday" aria-describedby="ayudaFechaNacimiento">
+          <small id="ayudaFechaNacimiento" style="color:#666;font-size:0.8rem;display:block;margin-top:6px;">
+            Si pulsaste «Buscar» y el padrón ya trajo tu fecha, este campo se oculta sola.
+            Si no, indícala aquí: la usamos solo para comprobar que cumples la edad mínima (18 años en Costa Rica).
+          </small>
+          <label id="labelDeclaracion" style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:0.88rem;color:#444;cursor:pointer;">
+            <input type="checkbox" id="declaracionFechaNacimiento" style="margin-top:3px;">
+            <span>Confirmo que la fecha de nacimiento es correcta y que soy mayor de edad según la ley aplicable.</span>
+          </label>
+        </div>
+
         <!-- Usuario y contraseña — se ocultan en flujo Google -->
         <div id="camposTradicionales">
           <div class="form-group">
@@ -126,6 +141,35 @@
     const GOOGLE_REG_URL = API_BASE + '/auth/google/register';
     const API_ORIGIN     = window.APP_CONFIG.API_ORIGIN;
 
+    /** Si el GET cédula devolvió fecha desde el padrón, no pedimos declaración en el cliente. */
+    let fechaNacimientoDesdePadron = null;
+
+    function aplicarEstadoFechaNacimientoUI() {
+      const input  = document.getElementById('fechaNacimientoDeclarada');
+      const chk    = document.getElementById('declaracionFechaNacimiento');
+      const labelD = document.getElementById('labelDeclaracion');
+      const ayuda  = document.getElementById('ayudaFechaNacimiento');
+      if (fechaNacimientoDesdePadron) {
+        input.value = '';
+        input.removeAttribute('required');
+        chk.checked = false;
+        chk.removeAttribute('required');
+        ayuda.textContent =
+          'Fecha de nacimiento obtenida del padrón (' + fechaNacimientoDesdePadron + '). No necesitas repetirla.';
+        input.style.display = 'none';
+        labelD.style.display = 'none';
+      } else {
+        input.style.display = '';
+        labelD.style.display = '';
+        input.setAttribute('required', 'required');
+        ayuda.textContent =
+          'Si pulsaste «Buscar» y el padrón ya trajo tu fecha, este campo se oculta sola. ' +
+          'Si no, indícala aquí: la usamos solo para comprobar que cumples la edad mínima (18 años en Costa Rica).';
+      }
+    }
+
+    aplicarEstadoFechaNacimientoUI();
+
     // ── Detectar si venimos del flujo OAuth de Google ─────────────────────────
     const params   = new URLSearchParams(window.location.search);
     const isGoogle = params.get('google') === 'true';
@@ -176,12 +220,17 @@
         const data = await resp.json();
         if (resp.ok && data.success && data.nombre) {
           document.getElementById('nombre').value = data.nombre;
+          fechaNacimientoDesdePadron = data.fechaNacimiento || null;
+          aplicarEstadoFechaNacimientoUI();
           status.style.color = 'green';
-          status.textContent  = '✓ Cédula encontrada: ' + data.nombre;
+          status.textContent  = '✓ Cédula encontrada: ' + data.nombre +
+            (fechaNacimientoDesdePadron ? ' · Fecha de nacimiento incluida en el padrón.' : '');
         } else {
           status.style.color = '#c00';
           status.textContent  = data.message || 'Cédula no encontrada en el padrón.';
           document.getElementById('nombre').value = '';
+          fechaNacimientoDesdePadron = null;
+          aplicarEstadoFechaNacimientoUI();
         }
       } catch (err) {
         status.style.color = '#c00';
@@ -214,13 +263,34 @@
         return;
       }
 
+      let fechaNacimiento = fechaNacimientoDesdePadron;
+      let declaracionFechaNacimiento = false;
+      if (!fechaNacimiento) {
+        fechaNacimiento = document.getElementById('fechaNacimientoDeclarada').value;
+        if (!fechaNacimiento) {
+          alert('Indica tu fecha de nacimiento. Si el padrón no la muestra, debes escribirla aquí.');
+          return;
+        }
+        declaracionFechaNacimiento = document.getElementById('declaracionFechaNacimiento').checked;
+        if (!declaracionFechaNacimiento) {
+          alert('Debes marcar la casilla de confirmación sobre tu fecha de nacimiento y mayoría de edad.');
+          return;
+        }
+      } else {
+        declaracionFechaNacimiento = true;
+      }
+
       // ── Flujo Google: completar registro ─────────────────────────────────
       if (isGoogle) {
         try {
           const resp = await fetch(GOOGLE_REG_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ googleId, email, nombre, cedula, telefono })
+            body: JSON.stringify({
+              googleId, email, nombre, cedula, telefono,
+              fechaNacimiento,
+              declaracionFechaNacimiento
+            })
           });
           const data = await resp.json().catch(() => null);
           if (!resp.ok) throw new Error(data?.message || 'Error al completar registro.');
@@ -246,7 +316,11 @@
         const resp = await fetch(REGISTER_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nombre, username: usuario, password: contrasena, cedula, email, telefono })
+          body: JSON.stringify({
+            nombre, username: usuario, password: contrasena, cedula, email, telefono,
+            fechaNacimiento,
+            declaracionFechaNacimiento
+          })
         });
         const data = await resp.json().catch(() => null);
         if (!resp.ok) {
