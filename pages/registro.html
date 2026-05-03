@@ -20,6 +20,57 @@
     .btn-google svg { flex-shrink: 0; }
     .field-readonly { background: #f0f0f0; cursor: not-allowed; }
     .google-badge { display: inline-block; background: #4285F4; color: #fff; font-size: 0.75rem; padding: 2px 7px; border-radius: 9px; margin-left: 6px; vertical-align: middle; }
+
+    /* Bloque fecha de nacimiento: ritmo vertical y agrupación visual */
+    .form-group--birth {
+      margin-top: 0.25rem;
+      margin-bottom: 1.25rem;
+      padding: 1.125rem 1.25rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      background: #f8fafc;
+      border: 1px solid var(--auth-border, #e2e8f0);
+      border-radius: 10px;
+    }
+    .form-group--birth .form-label {
+      margin-bottom: 0;
+      letter-spacing: 0.01em;
+    }
+    .form-group--birth .form-input {
+      margin-top: 0;
+    }
+    .birth-help {
+      margin: 0;
+      padding-top: 0.25rem;
+      font-size: 0.8125rem;
+      line-height: 1.55;
+      color: var(--auth-text-muted, #64748b);
+    }
+    .birth-declaration {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      margin: 0;
+      padding-top: 0.625rem;
+      border-top: 1px solid rgba(148, 163, 184, 0.35);
+      font-size: 0.875rem;
+      line-height: 1.45;
+      color: var(--auth-text-secondary, #475569);
+      cursor: pointer;
+    }
+    .birth-declaration .birth-checkbox {
+      flex-shrink: 0;
+      width: 1.125rem;
+      height: 1.125rem;
+      margin: 0.2rem 0 0;
+      accent-color: var(--auth-blue, #0031a0);
+      cursor: pointer;
+    }
+    .birth-declaration span {
+      flex: 1;
+      min-width: 0;
+    }
   </style>
 </head>
 <body class="auth-page">
@@ -67,16 +118,16 @@
         </div>
 
         <!-- Fecha de nacimiento: la toma el padrón si existe; si no, la declaras tú (mayoría de edad). -->
-        <div id="bloqueFechaNacimiento" class="form-group">
+        <div id="bloqueFechaNacimiento" class="form-group form-group--birth">
           <label class="form-label" for="fechaNacimientoDeclarada">Fecha de nacimiento</label>
           <input type="date" id="fechaNacimientoDeclarada" name="fechaNacimientoDeclarada" class="form-input"
                  autocomplete="bday" aria-describedby="ayudaFechaNacimiento">
-          <small id="ayudaFechaNacimiento" style="color:#666;font-size:0.8rem;display:block;margin-top:6px;">
-            Si pulsaste «Buscar» y el padrón ya trajo tu fecha, este campo se oculta sola.
+          <p class="birth-help" id="ayudaFechaNacimiento" role="note">
+            Si pulsaste «Buscar» y el padrón ya trajo tu fecha, este campo se oculta solo.
             Si no, indícala aquí: la usamos solo para comprobar que cumples la edad mínima (18 años en Costa Rica).
-          </small>
-          <label id="labelDeclaracion" style="display:flex;align-items:flex-start;gap:8px;margin-top:10px;font-size:0.88rem;color:#444;cursor:pointer;">
-            <input type="checkbox" id="declaracionFechaNacimiento" style="margin-top:3px;">
+          </p>
+          <label id="labelDeclaracion" class="birth-declaration" for="declaracionFechaNacimiento">
+            <input type="checkbox" id="declaracionFechaNacimiento" class="birth-checkbox">
             <span>Confirmo que la fecha de nacimiento es correcta y que soy mayor de edad según la ley aplicable.</span>
           </label>
         </div>
@@ -155,7 +206,7 @@
         chk.checked = false;
         chk.removeAttribute('required');
         ayuda.textContent =
-          'Fecha de nacimiento obtenida del padrón (' + fechaNacimientoDesdePadron + '). No necesitas repetirla.';
+          'Fecha de nacimiento obtenida del padrón (' + fechaNacimientoDesdePadron + '). No hace falta que la vuelvas a escribir.';
         input.style.display = 'none';
         labelD.style.display = 'none';
       } else {
@@ -163,7 +214,7 @@
         labelD.style.display = '';
         input.setAttribute('required', 'required');
         ayuda.textContent =
-          'Si pulsaste «Buscar» y el padrón ya trajo tu fecha, este campo se oculta sola. ' +
+          'Si pulsaste «Buscar» y el padrón ya trajo tu fecha, este campo se oculta solo. ' +
           'Si no, indícala aquí: la usamos solo para comprobar que cumples la edad mínima (18 años en Costa Rica).';
       }
     }
