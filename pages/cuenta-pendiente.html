@@ -17,6 +17,17 @@
     #resendForm input[type="email"] { width: 100%; padding: 0.625rem 0.75rem; font-family: inherit; font-size: 0.9375rem; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 0.75rem; box-sizing: border-box; }
     #resendForm input[type="email"]:focus { outline: none; border-color: #0031a0; box-shadow: 0 0 0 3px rgba(0,49,160,0.12); }
     .countdown { font-size: 0.8rem; color: #64748b; margin-top: 0.5rem; text-align: center; display: none; }
+    .mail-note-banner {
+      display: none;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: #92400e;
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 0.875rem 1rem;
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 <body class="auth-page">
@@ -30,7 +41,9 @@
         <p class="auth-subtitle">Tu cuenta está pendiente de activación</p>
       </div>
 
-      <div class="info-box">
+      <div id="mailNoteBanner" class="mail-note-banner" role="status"></div>
+
+      <div class="info-box" id="infoBoxPrincipal">
         <p>Te enviamos un enlace de activación a tu correo. Haz clic en él para activar tu cuenta y poder iniciar sesión.</p>
       </div>
 
@@ -75,6 +88,27 @@
   const params = new URLSearchParams(window.location.search);
   const emailParam = params.get('email');
   if (emailParam) document.getElementById('emailInput').value = decodeURIComponent(emailParam);
+
+  try {
+    const note = sessionStorage.getItem('ticoautos_activation_note');
+    if (note) {
+      const banner = document.getElementById('mailNoteBanner');
+      banner.textContent = note;
+      banner.style.display = 'block';
+      sessionStorage.removeItem('ticoautos_activation_note');
+    }
+    const sent = sessionStorage.getItem('ticoautos_activation_sent');
+    if (sent === '0') {
+      const box = document.getElementById('infoBoxPrincipal');
+      if (box) {
+        box.querySelector('p').textContent =
+          'Tu cuenta está creada, pero es posible que el correo de activación no se haya enviado todavía. Revisa spam, usa «Reenviar» abajo o espera unos minutos.';
+      }
+      sessionStorage.removeItem('ticoautos_activation_sent');
+    } else if (sent === '1') {
+      sessionStorage.removeItem('ticoautos_activation_sent');
+    }
+  } catch (_) { /* sessionStorage no disponible */ }
 
   let cooldownInterval = null;
 

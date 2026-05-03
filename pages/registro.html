@@ -377,6 +377,14 @@
         if (!resp.ok) {
           throw new Error(data?.message || 'Error en registro');
         }
+        try {
+          if (data?.activationEmailNote) {
+            sessionStorage.setItem('ticoautos_activation_note', data.activationEmailNote);
+          }
+          if (typeof data?.activationEmailSent === 'boolean') {
+            sessionStorage.setItem('ticoautos_activation_sent', data.activationEmailSent ? '1' : '0');
+          }
+        } catch (_) { /* ignorar */ }
         // Registro exitoso → cuenta pendiente de activación
         window.location.href = `cuenta-pendiente.html?email=${encodeURIComponent(email)}`;
       } catch (err) {
