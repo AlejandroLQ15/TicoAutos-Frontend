@@ -110,14 +110,12 @@
     function init() {
       const auth = getAuth();
       setupNav(auth);
-      loadVehiclePage(auth);
+      loadVehiclePage();
 
       document.getElementById('shareLinkBtn').addEventListener('click', copyShareLink);
 
-      if (auth) {
-        questionFormEl.addEventListener('submit', event => submitQuestion(event, auth));
-        questionsListEl.addEventListener('submit', event => submitAnswer(event, auth));
-      }
+      questionFormEl.addEventListener('submit', submitQuestion);
+      questionsListEl.addEventListener('submit', submitAnswer);
     }
 
     function copyShareLink() {
@@ -231,13 +229,16 @@
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         console.error(`[API ${response.status}] ${path}`, data);
-        const msg = (typeof data === 'string' && data)
+        let msg = (typeof data === 'string' && data)
           || data.message || data.msg || data.error || data.mensaje
           || (typeof data.error === 'object' ? data.error?.message : '')
           || (Array.isArray(data.errors) && data.errors.length
                ? data.errors.map(e => e.msg || e.message || String(e)).join(', ')
                : '')
           || `Error ${response.status}`;
+        if (response.status === 401 && (data.code === 'TOKEN_EXPIRED' || /sesi[oó]n expir/i.test(msg) || /token expired/i.test(msg))) {
+          msg = 'Tu sesión expiró. Iniciá sesión de nuevo para enviar mensajes o actualizar esta página.';
+        }
         throw new Error(msg);
       }
 
@@ -427,7 +428,8 @@
       });
     }
 
-    async function loadVehiclePage(auth) {
+    async function loadVehiclePage() {
+      const auth = getAuth();
       const vehicleId = getVehiculoIdFromQuery();
       const questionsHint = document.getElementById('questionsHint');
 
@@ -503,8 +505,13 @@
       }
     }
 
-    async function submitQuestion(event, auth) {
+    async function submitQuestion(event) {
       event.preventDefault();
+      const auth = getAuth();
+      if (!auth) {
+        redirectToLogin();
+        return;
+      }
       const vehicleId = getVehiculoIdFromQuery();
       if (!vehicleId) {
         redirectToLogin();
@@ -538,10 +545,16 @@
       }
     }
 
-    async function submitAnswer(event, auth) {
+    async function submitAnswer(event) {
       const form = event.target;
       if (!form.classList.contains('answer-form')) return;
       event.preventDefault();
+
+      const auth = getAuth();
+      if (!auth) {
+        redirectToLogin();
+        return;
+      }
 
       const questionId = form.dataset.questionId;
       const askerId = form.dataset.askerId;
