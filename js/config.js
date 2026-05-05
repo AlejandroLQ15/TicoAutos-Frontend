@@ -7,7 +7,9 @@
 
 (function () {
   'use strict';
-  var isLocal = /localhost|127\.0\.0\.1/i.test(window.location.hostname);
+  var host = String(window.location.hostname || '');
+  // `file://` => hostname vacío: tratarlo como desarrollo local.
+  var isLocal = !host || /localhost|127\.0\.0\.1/i.test(host);
   window.APP_CONFIG = window.APP_CONFIG || {
     API_BASE:   isLocal ? 'http://localhost:3000/api' : 'https://ticoautos-backend.onrender.com/api',
     API_ORIGIN: isLocal ? 'http://localhost:3000'     : 'https://ticoautos-backend.onrender.com',
